@@ -3,6 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "next-themes";
+import { Moon, Sun } from "lucide-react";
 
 export default function SettingsTab({
   pricePerKg,
@@ -13,6 +15,7 @@ export default function SettingsTab({
   onClearSavedCalculations
 }) {
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
 
   return (
     <div className="space-y-4">
@@ -41,16 +44,47 @@ export default function SettingsTab({
               <SelectValue placeholder="Select material" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="stainless-steel">Stainless Steel (7.85 g/cm³)</SelectItem>
-              <SelectItem value="carbon-steel">Carbon Steel (7.85 g/cm³)</SelectItem>
-              <SelectItem value="aluminum">Aluminum (2.70 g/cm³)</SelectItem>
-              <SelectItem value="copper">Copper (8.96 g/cm³)</SelectItem>
-              <SelectItem value="brass">Brass (8.50 g/cm³)</SelectItem>
-              <SelectItem value="titanium">Titanium (4.51 g/cm³)</SelectItem>
+              <SelectItem value="ss-steel-tube">SS Steel Tube (7.85 g/cm³)</SelectItem>
+              <SelectItem value="ms-metal-tube">MS Metal Tube (7.85 g/cm³)</SelectItem>
             </SelectContent>
           </Select>
           <p className="text-sm text-muted-foreground">
             Select the default material for weight calculations. Density affects weight calculations.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-base font-semibold">Theme</Label>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant={theme === "light" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setTheme("light")}
+              className="flex items-center space-x-2"
+            >
+              <Sun className="h-4 w-4" />
+              <span>Light</span>
+            </Button>
+            <Button
+              variant={theme === "dark" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setTheme("dark")}
+              className="flex items-center space-x-2"
+            >
+              <Moon className="h-4 w-4" />
+              <span>Dark</span>
+            </Button>
+            <Button
+              variant={theme === "system" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setTheme("system")}
+              className="flex items-center space-x-2"
+            >
+              <span>System</span>
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Choose your preferred theme. System will follow your OS setting.
           </p>
         </div>
 

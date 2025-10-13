@@ -1,3 +1,4 @@
+"use client"
 import { useState, useEffect } from "react";
 import {
   Card,
@@ -57,7 +58,7 @@ export default function Calculator() {
 
   // New features state
   const [pricePerKg, setPricePerKg] = useState(260);
-  const [material, setMaterial] = useState("stainless-steel");
+  const [material, setMaterial] = useState("ss-steel-tube");
   const [calculationName, setCalculationName] = useState("");
   const [savedCalculations, setSavedCalculations] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -693,7 +694,7 @@ export default function Calculator() {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-secondary/20 to-background">
+    <div className=" flex items-center justify-center p-4 bg-gradient-to-br from-background via-secondary/20 to-background">
       <Card className="w-full max-w-4xl shadow-[var(--shadow-elevated)]">
         <CardHeader className="space-y-2">
           <div className="flex items-center justify-between">
