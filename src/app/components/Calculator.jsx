@@ -107,114 +107,145 @@ export default function Calculator() {
       return;
     }
 
-    const tubeLength = lengthInInches * 0.0254; // Convert inches to meters
     const density = getMaterialDensity(material);
 
-    let weightPerMeter = 0;
+    let weightPerTube = 0;
     let size = 0;
     let width = 0;
     let height = 0;
 
-    if (shape === "round") {
-      const sizeInInches = customSize
-        ? parseFloat(customSize)
-        : parseFloat(standardSize);
-      if (isNaN(sizeInInches) || sizeInInches <= 0) {
-        toast({
-          title: "Invalid tube size",
-          description: "Please select or enter a valid tube diameter.",
-          variant: "destructive",
-        });
-        return;
-      }
-      if (sizeInInches < 0.1 || sizeInInches > 20) {
-        toast({
-          title: "Size out of range",
-          description: "Tube diameter should be between 0.1 and 20 inches.",
-          variant: "destructive",
-        });
-        return;
-      }
-      size = sizeInInches;
-      const od = sizeInInches * 25.4; // Convert to mm
-      const id = od - 2 * wt;
-      const crossSectionArea =
-        (Math.PI * (Math.pow(od / 2, 2) - Math.pow(id / 2, 2))) / 1000000; // Convert mm² to m²
-      weightPerMeter = crossSectionArea * density * 1000; // kg/m
-    } else if (shape === "square") {
-      const sizeInInches = customSize
-        ? parseFloat(customSize)
-        : parseFloat(standardSize);
-      if (isNaN(sizeInInches) || sizeInInches <= 0) {
-        toast({
-          title: "Invalid tube size",
-          description: "Please select or enter a valid tube side length.",
-          variant: "destructive",
-        });
-        return;
-      }
-      if (sizeInInches < 0.1 || sizeInInches > 20) {
-        toast({
-          title: "Size out of range",
-          description: "Tube side length should be between 0.1 and 20 inches.",
-          variant: "destructive",
-        });
-        return;
-      }
-      size = sizeInInches;
-      const side = sizeInInches * 25.4; // Convert to mm
-      const innerSide = side - 2 * wt;
-      const crossSectionArea =
-        (Math.pow(side, 2) - Math.pow(innerSide, 2)) / 1000000; // Convert mm² to m²
-      weightPerMeter = crossSectionArea * density * 1000; // kg/m
-    } else if (shape === "rectangular") {
+    if (shape === "sheet") {
       const widthInInches = customWidth
         ? parseFloat(customWidth)
         : parseFloat(standardWidth);
-      const heightInInches = customHeight
-        ? parseFloat(customHeight)
-        : parseFloat(standardHeight);
-
-      if (
-        isNaN(widthInInches) ||
-        widthInInches <= 0 ||
-        isNaN(heightInInches) ||
-        heightInInches <= 0
-      ) {
+      if (isNaN(widthInInches) || widthInInches <= 0) {
         toast({
-          title: "Invalid dimensions",
-          description: "Please select or enter valid width and height.",
+          title: "Invalid sheet width",
+          description: "Please select or enter a valid sheet width.",
           variant: "destructive",
         });
         return;
       }
-
-      if (
-        widthInInches < 0.1 ||
-        widthInInches > 20 ||
-        heightInInches < 0.1 ||
-        heightInInches > 20
-      ) {
+      if (widthInInches < 1 || widthInInches > 120) {
         toast({
-          title: "Dimensions out of range",
-          description: "Width and height should be between 0.1 and 20 inches.",
+          title: "Width out of range",
+          description: "Sheet width should be between 1 and 120 inches.",
           variant: "destructive",
         });
         return;
       }
-
       width = widthInInches;
-      height = heightInInches;
-      const widthMm = widthInInches * 25.4; // Convert to mm
-      const heightMm = heightInInches * 25.4; // Convert to mm
-      const innerWidth = widthMm - 2 * wt;
-      const innerHeight = heightMm - 2 * wt;
-      const crossSectionArea =
-        (widthMm * heightMm - innerWidth * innerHeight) / 1000000; // Convert mm² to m²
-      weightPerMeter = crossSectionArea * density * 1000; // kg/m
-    }
+      const sheetWidth = widthInInches * 25.4; // Convert to mm
+      const sheetLength = lengthInInches * 25.4; // Convert to mm
+      const sheetThickness = wt; // Already in mm
+      const volume = (sheetWidth * sheetLength * sheetThickness) / 1000000000; // Convert mm³ to m³
+      weightPerTube = volume * density * 1000; // kg per sheet
+    } else {
+      // For tubes: round, square, rectangular
+      const tubeLength = lengthInInches * 0.0254; // Convert inches to meters
+      let weightPerMeter = 0;
 
-    const weightPerTube = weightPerMeter * tubeLength;
+      if (shape === "round") {
+        const sizeInInches = customSize
+          ? parseFloat(customSize)
+          : parseFloat(standardSize);
+        if (isNaN(sizeInInches) || sizeInInches <= 0) {
+          toast({
+            title: "Invalid tube size",
+            description: "Please select or enter a valid tube diameter.",
+            variant: "destructive",
+          });
+          return;
+        }
+        if (sizeInInches < 0.1 || sizeInInches > 20) {
+          toast({
+            title: "Size out of range",
+            description: "Tube diameter should be between 0.1 and 20 inches.",
+            variant: "destructive",
+          });
+          return;
+        }
+        size = sizeInInches;
+        const od = sizeInInches * 25.4; // Convert to mm
+        const id = od - 2 * wt;
+        const crossSectionArea =
+          (Math.PI * (Math.pow(od / 2, 2) - Math.pow(id / 2, 2))) / 1000000; // Convert mm² to m²
+        weightPerMeter = crossSectionArea * density * 1000; // kg/m
+      } else if (shape === "square") {
+        const sizeInInches = customSize
+          ? parseFloat(customSize)
+          : parseFloat(standardSize);
+        if (isNaN(sizeInInches) || sizeInInches <= 0) {
+          toast({
+            title: "Invalid tube size",
+            description: "Please select or enter a valid tube side length.",
+            variant: "destructive",
+          });
+          return;
+        }
+        if (sizeInInches < 0.1 || sizeInInches > 20) {
+          toast({
+            title: "Size out of range",
+            description: "Tube side length should be between 0.1 and 20 inches.",
+            variant: "destructive",
+          });
+          return;
+        }
+        size = sizeInInches;
+        const side = sizeInInches * 25.4; // Convert to mm
+        const innerSide = side - 2 * wt;
+        const crossSectionArea =
+          (Math.pow(side, 2) - Math.pow(innerSide, 2)) / 1000000; // Convert mm² to m²
+        weightPerMeter = crossSectionArea * density * 1000; // kg/m
+      } else if (shape === "rectangular") {
+        const widthInInches = customWidth
+          ? parseFloat(customWidth)
+          : parseFloat(standardWidth);
+        const heightInInches = customHeight
+          ? parseFloat(customHeight)
+          : parseFloat(standardHeight);
+
+        if (
+          isNaN(widthInInches) ||
+          widthInInches <= 0 ||
+          isNaN(heightInInches) ||
+          heightInInches <= 0
+        ) {
+          toast({
+            title: "Invalid dimensions",
+            description: "Please select or enter valid width and height.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (
+          widthInInches < 0.1 ||
+          widthInInches > 20 ||
+          heightInInches < 0.1 ||
+          heightInInches > 20
+        ) {
+          toast({
+            title: "Dimensions out of range",
+            description: "Width and height should be between 0.1 and 20 inches.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        width = widthInInches;
+        height = heightInInches;
+        const widthMm = widthInInches * 25.4; // Convert to mm
+        const heightMm = heightInInches * 25.4; // Convert to mm
+        const innerWidth = widthMm - 2 * wt;
+        const innerHeight = heightMm - 2 * wt;
+        const crossSectionArea =
+          (widthMm * heightMm - innerWidth * innerHeight) / 1000000; // Convert mm² to m²
+        weightPerMeter = crossSectionArea * density * 1000; // kg/m
+      }
+
+      weightPerTube = weightPerMeter * tubeLength;
+    }
 
     if (weightPerTube <= 0 || !isFinite(weightPerTube)) {
       toast({
@@ -277,6 +308,8 @@ export default function Calculator() {
   const getTubeDescription = (tube) => {
     if (tube.shape === "rectangular") {
       return `${tube.width}" × ${tube.height}"`;
+    } else if (tube.shape === "sheet") {
+      return `${tube.width}" × ${tube.length}"`;
     }
     return `${tube.size}"`;
   };
@@ -627,35 +660,46 @@ export default function Calculator() {
     updatedTube.quantity = parseFloat(quantity);
 
     // Recalculate weight
-    const tubeLength = updatedTube.length * 0.0254;
     const density = getMaterialDensity(material);
-    let weightPerMeter = 0;
+    let weightPerTube = 0;
 
-    if (updatedTube.shape === "round") {
-      const od = updatedTube.size * 25.4; // Convert to mm
-      const id = od - 2 * updatedTube.thickness;
-      const crossSectionArea =
-        (Math.PI * (Math.pow(od / 2, 2) - Math.pow(id / 2, 2))) / 1000000; // Convert mm² to m²
-      weightPerMeter = crossSectionArea * density * 1000; // kg/m
-    } else if (updatedTube.shape === "square") {
-      const side = updatedTube.size * 25.4; // Convert to mm
-      const innerSide = side - 2 * updatedTube.thickness;
-      const crossSectionArea =
-        (Math.pow(side, 2) - Math.pow(innerSide, 2)) / 1000000; // Convert mm² to m²
-      weightPerMeter = crossSectionArea * density * 1000; // kg/m
-    } else if (updatedTube.shape === "rectangular") {
-      const widthMm = updatedTube.width * 25.4; // Convert to mm
-      const heightMm = updatedTube.height * 25.4; // Convert to mm
-      const innerWidth = widthMm - 2 * updatedTube.thickness;
-      const innerHeight = heightMm - 2 * updatedTube.thickness;
-      const crossSectionArea =
-        (widthMm * heightMm - innerWidth * innerHeight) / 1000000; // Convert mm² to m²
-      weightPerMeter = crossSectionArea * density * 1000; // kg/m
+    if (updatedTube.shape === "sheet") {
+      const sheetWidth = updatedTube.width * 25.4; // Convert to mm
+      const sheetLength = updatedTube.length * 25.4; // Convert to mm
+      const sheetThickness = updatedTube.thickness; // Already in mm
+      const volume = (sheetWidth * sheetLength * sheetThickness) / 1000000000; // Convert mm³ to m³
+      weightPerTube = volume * density * 1000; // kg per sheet
+    } else {
+      // For tubes: round, square, rectangular
+      const tubeLength = updatedTube.length * 0.0254;
+      let weightPerMeter = 0;
+
+      if (updatedTube.shape === "round") {
+        const od = updatedTube.size * 25.4; // Convert to mm
+        const id = od - 2 * updatedTube.thickness;
+        const crossSectionArea =
+          (Math.PI * (Math.pow(od / 2, 2) - Math.pow(id / 2, 2))) / 1000000; // Convert mm² to m²
+        weightPerMeter = crossSectionArea * density * 1000; // kg/m
+      } else if (updatedTube.shape === "square") {
+        const side = updatedTube.size * 25.4; // Convert to mm
+        const innerSide = side - 2 * updatedTube.thickness;
+        const crossSectionArea =
+          (Math.pow(side, 2) - Math.pow(innerSide, 2)) / 1000000; // Convert mm² to m²
+        weightPerMeter = crossSectionArea * density * 1000; // kg/m
+      } else if (updatedTube.shape === "rectangular") {
+        const widthMm = updatedTube.width * 25.4; // Convert to mm
+        const heightMm = updatedTube.height * 25.4; // Convert to mm
+        const innerWidth = widthMm - 2 * updatedTube.thickness;
+        const innerHeight = heightMm - 2 * updatedTube.thickness;
+        const crossSectionArea =
+          (widthMm * heightMm - innerWidth * innerHeight) / 1000000; // Convert mm² to m²
+        weightPerMeter = crossSectionArea * density * 1000; // kg/m
+      }
+
+      weightPerTube = weightPerMeter * tubeLength;
     }
 
-    updatedTube.weightPerTube = parseFloat(
-      (weightPerMeter * tubeLength).toFixed(2)
-    );
+    updatedTube.weightPerTube = parseFloat(weightPerTube.toFixed(2));
 
     setTubes(tubes.map((t) => (t.id === editingTube.id ? updatedTube : t)));
     setEditingTube(null);

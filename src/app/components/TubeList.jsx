@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2, Copy, Edit, Search } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Trash2, Copy, Edit, Search, CheckCircle } from "lucide-react";
 
 export default function TubeList({
   tubes,
@@ -9,7 +10,8 @@ export default function TubeList({
   pricePerKg,
   onRemoveTube,
   onDuplicateTube,
-  onEditTube
+  onEditTube,
+  isUsingStandardWeight
 }) {
   const getTubeDescription = (tube) => {
     if (tube.shape === "rectangular") {
@@ -55,6 +57,12 @@ export default function TubeList({
                 <span className="text-sm">{getTubeDescription(tube)}</span>
                 <span className="text-sm text-muted-foreground">•</span>
                 <span className="text-sm">{tube.thickness}mm</span>
+                {isUsingStandardWeight && isUsingStandardWeight(tube) && (
+                  <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Standard
+                  </Badge>
+                )}
               </div>
               <div className="text-xs text-muted-foreground">
                 Length: {tube.length}" | Qty: {tube.quantity} | {tube.weightPerTube}kg each
