@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useToast } from "./use-toast.js";
-import { getRoundPipeWeightPer20ft, getSquarePipeWeightPer20ft, convert20ftToPerMeter } from "../data/roundPipeWeights.js";
+import { getRoundPipeWeightPer20ft, getSquarePipeWeightPer20ft } from "../data/roundPipeWeights.js";
 
 const standardSizes = {
   round: ["0.5", "0.75", "1.0", "1.25", "1.5", "2.0", "2.5", "3.0"],
@@ -84,7 +84,7 @@ export const useTubes = (material) => {
       const standardWeightPer20ft = getRoundPipeWeightPer20ft(size, wt);
       if (standardWeightPer20ft !== null) {
         // Convert 20ft weight to per meter, then multiply by actual length
-        const weightPerMeter = convert20ftToPerMeter(standardWeightPer20ft);
+        const weightPerMeter = standardWeightPer20ft / 20 * 0.3048; // Convert lbs/20ft to kg/m
         const tubeLength = lengthInInches * 0.0254; // Convert inches to meters
         return weightPerMeter * tubeLength;
       }
@@ -92,7 +92,7 @@ export const useTubes = (material) => {
       const standardWeightPer20ft = getSquarePipeWeightPer20ft(size, wt);
       if (standardWeightPer20ft !== null) {
         // Convert 20ft weight to per meter, then multiply by actual length
-        const weightPerMeter = convert20ftToPerMeter(standardWeightPer20ft);
+        const weightPerMeter = standardWeightPer20ft / 20 * 0.3048; // Convert lbs/20ft to kg/m
         const tubeLength = lengthInInches * 0.0254; // Convert inches to meters
         return weightPerMeter * tubeLength;
       }
