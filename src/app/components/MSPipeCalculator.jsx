@@ -179,6 +179,39 @@ export default function MSPipeCalculator() {
    const [newMaterialName, setNewMaterialName] = useState("");
    const [newMaterialDensity, setNewMaterialDensity] = useState("");
 
+   const addCustomMaterial = () => {
+     if (!newMaterialName.trim() || !newMaterialDensity) {
+       toast({
+         title: "Invalid input",
+         description: "Please provide both a name and density.",
+         variant: "destructive",
+       });
+       return;
+     }
+     const density = parseFloat(newMaterialDensity);
+     if (isNaN(density) || density <= 0) {
+       toast({
+         title: "Invalid density",
+         description: "Density must be a positive number.",
+         variant: "destructive",
+       });
+       return;
+     }
+     
+     const newMaterial = { name: newMaterialName.trim(), density };
+     setCustomMaterials([...customMaterials, newMaterial]);
+     setMaterial(newMaterial.name);
+     
+     setNewMaterialName("");
+     setNewMaterialDensity("");
+     setShowCustomMaterialDialog(false);
+     
+     toast({
+       title: "Material added",
+       description: `${newMaterial.name} has been added successfully.`,
+     });
+   };
+
    // Material densities - computed inside component
    const materialDensities = useMemo(() => ({
      "carbon-steel": 7.85,
