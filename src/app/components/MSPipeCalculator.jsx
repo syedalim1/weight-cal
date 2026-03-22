@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -815,17 +815,17 @@ export default function MSPipeCalculator() {
     setComparisonData(data);
   };
 
-  // Load saved calculations on mount
-  useState(() => {
-    const saved = localStorage.getItem("msCalc_savedCalculations");
-    if (saved) {
-      try {
+  // Load saved calculations on mount (client-side only)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("msCalc_savedCalculations");
+      if (saved) {
         setSavedCalculations(JSON.parse(saved));
-      } catch (error) {
-        console.error("Error loading saved calculations:", error);
       }
+    } catch (error) {
+      console.error("Error loading saved calculations:", error);
     }
-  });
+  }, []);
 
   return (
     <div className="flex items-center justify-center p-4 bg-gradient-to-br from-background via-secondary/20 to-background">

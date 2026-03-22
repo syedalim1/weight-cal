@@ -27,9 +27,12 @@ import {
   CircleDollarSign,
   Save,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 import { usePricing } from "@/hooks/usePricing.js";
 import { toast } from "sonner";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 function SectionHeader({ icon: Icon, title, description }) {
   return (
@@ -74,6 +77,26 @@ function NumberInput({ label, value, onChange, placeholder, id }) {
 
 export default function PricingCalculator() {
   const p = usePricing();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
+  const editId = searchParams.get("edit");
+
+  useEffect(() => {
+    if (editId) {
+      p.loadProduct(editId).then((res) => {
+        if (!res?.success) {
+          toast.error("Failed to load product", {
+            description: res?.error || "Could not load the specified product.",
+          });
+        }
+      });
+    }
+  }, [editId]);
+
+  // Derived from `p` check
+  const isEditing = !!p.editId;
+  const isLoading = p.loadingProduct;
 
   const fmt = (v) =>
     v.toLocaleString("en-IN", { maximumFractionDigits: 2 });
@@ -517,17 +540,26 @@ export default function PricingCalculator() {
         </Card>
 
         {/* ── SAVE PRODUCT BUTTON ── */}
-        <div className="flex justify-center">
+        <div className="flex justify-center flex-col items-center gap-2">
+          {isLoading && (
+            <div className="flex items-center text-muted-foreground text-sm gap-2 mb-2">
+              <RefreshCw className="h-4 w-4 animate-spin" />
+              Loading product data...
+            </div>
+          )}
           <Button
             size="lg"
-            className="px-8 py-6 text-lg font-semibold gap-2"
-            disabled={p.saving || p.totalCost <= 0}
+            className="px-8 py-6 text-lg font-semibold gap-2 transition-all hover:scale-105 active:scale-95 shadow-md disabled:hover:scale-100 disabled:opacity-75"
+            disabled={p.saving || p.totalCost <= 0 || isLoading}
             onClick={async () => {
               const result = await p.saveProduct();
               if (result.success) {
-                toast.success("Product saved successfully!", {
+                toast.success(result.isUpdate ? "Product updated!" : "Product saved!", {
                   description: `${p.modelNumber || p.productType} — ₹${p.totalCost.toLocaleString("en-IN")}`,
                 });
+                if (result.isUpdate) {
+                   router.push("/products"); // Return to list after update
+                }
               } else {
                 toast.error("Failed to save product", {
                   description: result.error,
@@ -540,7 +572,7 @@ export default function PricingCalculator() {
             ) : (
               <Save className="h-5 w-5" />
             )}
-            {p.saving ? "Saving..." : "Save Product"}
+            {p.saving ? (isEditing ? "Updating..." : "Saving...") : (isEditing ? "Update Product" : "Save Product")}
           </Button>
         </div>
 
