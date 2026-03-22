@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calculator, Wrench } from "lucide-react";
+import { Calculator, Wrench, IndianRupee } from "lucide-react";
 
 export default function Home() {
   return (
@@ -22,6 +22,12 @@ export default function Home() {
             <Button className="w-full" variant="outline" size="lg">
               <Wrench className="mr-2 h-5 w-5" />
               MS Pipe Calculator
+            </Button>
+          </Link>
+          <Link href="/pricing">
+            <Button className="w-full" variant="outline" size="lg">
+              <IndianRupee className="mr-2 h-5 w-5" />
+              Steel Furniture Pricing
             </Button>
           </Link>
         </CardContent>
