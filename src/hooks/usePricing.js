@@ -3,6 +3,10 @@ import { useState, useMemo, useCallback } from "react";
 import { supabase } from "@/lib/supabase.js";
 
 export function usePricing() {
+  // Edit mode
+  const [editId, setEditId] = useState(null);
+  const [loadingProduct, setLoadingProduct] = useState(false);
+
   // Product Details
   const [productType, setProductType] = useState("chair");
   const [materialType, setMaterialType] = useState("ss");
@@ -53,6 +57,53 @@ export function usePricing() {
     return isNaN(n) ? 0 : n;
   };
 
+  // Convert DB value to form string (keep empty if 0)
+  const toStr = (v) => (v === null || v === undefined || v === 0 ? "" : String(v));
+
+  // Load a product by ID for editing
+  const loadProduct = useCallback(async (id) => {
+    if (!supabase || !id) return;
+    setLoadingProduct(true);
+
+    const { data, error } = await supabase
+      .from("product_pricing")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error || !data) {
+      setLoadingProduct(false);
+      return { success: false, error: error?.message || "Product not found" };
+    }
+
+    setEditId(data.id);
+    setProductType(data.product_type || "chair");
+    setMaterialType(data.material_type || "ss");
+    setModelNumber(data.model_number || "");
+    setWidth(toStr(data.width));
+    setLength(toStr(data.length));
+    setSheetCost(toStr(data.sheet_cost));
+    setPipeCost(toStr(data.pipe_cost));
+    setTopType(data.top_type || "steel");
+    setTopCost(toStr(data.top_cost));
+    setGraniteColor(data.granite_color || "black");
+    setSeatType(data.seat_type || "cushion");
+    setSeatCost(toStr(data.seat_cost));
+    setFinishType(data.finish_type || "polish");
+    setFinishCost(toStr(data.finish_cost));
+    setCoatingColor(data.coating_color || "black");
+    setLabourCost(toStr(data.labour_cost));
+    setWeldingCost(toStr(data.welding_cost));
+    setElectricityCost(toStr(data.electricity_cost));
+    setMachineCost(toStr(data.machine_cost));
+    setWholesalePercent(toStr(data.wholesale_percent) || "10");
+    setRetailPercent(toStr(data.retail_percent) || "20");
+    setShowroomPercent(toStr(data.showroom_percent) || "35");
+
+    setLoadingProduct(false);
+    return { success: true };
+  }, []);
+
   // Derived calculations
   const totalCost = useMemo(() => {
     return (
@@ -88,7 +139,37 @@ export function usePricing() {
     return "OK";
   }, [customPrice, wholesalePrice, retailPrice]);
 
-  // Save product to Supabase
+  // Build the row data object
+  const buildRow = () => ({
+    product_type: productType,
+    material_type: materialType,
+    model_number: modelNumber || null,
+    width: num(width) || null,
+    length: num(length) || null,
+    sheet_cost: num(sheetCost),
+    pipe_cost: num(pipeCost),
+    top_type: topType,
+    top_cost: num(topCost),
+    granite_color: topType === "granite" ? graniteColor : null,
+    seat_type: seatType,
+    seat_cost: num(seatCost),
+    finish_type: finishType,
+    finish_cost: num(finishCost),
+    coating_color: finishType === "powder_coating" ? coatingColor : null,
+    labour_cost: num(labourCost),
+    welding_cost: num(weldingCost),
+    electricity_cost: num(electricityCost),
+    machine_cost: num(machineCost),
+    total_cost: totalCost,
+    wholesale_percent: num(wholesalePercent),
+    retail_percent: num(retailPercent),
+    showroom_percent: num(showroomPercent),
+    wholesale_price: wholesalePrice,
+    retail_price: retailPrice,
+    showroom_price: showroomPrice,
+  });
+
+  // Save (insert) or Update product
   const saveProduct = useCallback(async () => {
     if (!supabase) {
       return { success: false, error: "Supabase not configured. Please add your credentials to .env.local and restart the server." };
@@ -99,50 +180,35 @@ export function usePricing() {
 
     setSaving(true);
     try {
-      const { data, error } = await supabase
-        .from("product_pricing")
-        .insert([
-          {
-            product_type: productType,
-            material_type: materialType,
-            model_number: modelNumber || null,
-            width: num(width) || null,
-            length: num(length) || null,
-            sheet_cost: num(sheetCost),
-            pipe_cost: num(pipeCost),
-            top_type: topType,
-            top_cost: num(topCost),
-            granite_color: topType === "granite" ? graniteColor : null,
-            seat_type: seatType,
-            seat_cost: num(seatCost),
-            finish_type: finishType,
-            finish_cost: num(finishCost),
-            coating_color: finishType === "powder_coating" ? coatingColor : null,
-            labour_cost: num(labourCost),
-            welding_cost: num(weldingCost),
-            electricity_cost: num(electricityCost),
-            machine_cost: num(machineCost),
-            total_cost: totalCost,
-            wholesale_percent: num(wholesalePercent),
-            retail_percent: num(retailPercent),
-            showroom_percent: num(showroomPercent),
-            wholesale_price: wholesalePrice,
-            retail_price: retailPrice,
-            showroom_price: showroomPrice,
-          },
-        ])
-        .select();
+      const row = buildRow();
+      let result;
 
-      if (error) {
-        return { success: false, error: error.message };
+      if (editId) {
+        // Update existing
+        result = await supabase
+          .from("product_pricing")
+          .update(row)
+          .eq("id", editId)
+          .select();
+      } else {
+        // Insert new
+        result = await supabase
+          .from("product_pricing")
+          .insert([row])
+          .select();
       }
-      return { success: true, data };
+
+      if (result.error) {
+        return { success: false, error: result.error.message };
+      }
+      return { success: true, data: result.data, isUpdate: !!editId };
     } catch (err) {
       return { success: false, error: err.message };
     } finally {
       setSaving(false);
     }
   }, [
+    editId,
     productType, materialType, modelNumber, width, length,
     sheetCost, pipeCost, topType, topCost, graniteColor,
     seatType, seatCost, finishType, finishCost, coatingColor,
@@ -152,6 +218,10 @@ export function usePricing() {
   ]);
 
   return {
+    // Edit mode
+    editId,
+    loadProduct,
+    loadingProduct,
     // Product Details
     productType, setProductType,
     materialType, setMaterialType,

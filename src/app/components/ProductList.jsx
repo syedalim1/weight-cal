@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -19,6 +20,17 @@ import {
   TableRow,
 } from "@/components/ui/table.jsx";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog.jsx";
+import {
   Package,
   IndianRupee,
   Search,
@@ -26,14 +38,19 @@ import {
   Loader2,
   AlertCircle,
   RefreshCw,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase.js";
+import { toast } from "sonner";
 
 export default function ProductList() {
+  const router = useRouter();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
 
   const fetchProducts = async () => {
     if (!supabase) {
@@ -56,6 +73,30 @@ export default function ProductList() {
       setProducts(data || []);
     }
     setLoading(false);
+  };
+
+  const handleDelete = async (id, modelNumber) => {
+    setDeletingId(id);
+    const { error: deleteError } = await supabase
+      .from("product_pricing")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) {
+      toast.error("Failed to delete product", {
+        description: deleteError.message,
+      });
+    } else {
+      toast.success("Product deleted", {
+        description: `${modelNumber || "Product"} has been removed`,
+      });
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+    }
+    setDeletingId(null);
+  };
+
+  const handleEdit = (id) => {
+    router.push(`/pricing?edit=${id}`);
   };
 
   useEffect(() => {
@@ -223,8 +264,11 @@ export default function ProductList() {
                       <TableHead className="text-right text-amber-600 dark:text-amber-400">
                         Retail
                       </TableHead>
-                      <TableHead className="text-right text-emerald-600 dark:text-emerald-400 pr-6">
+                      <TableHead className="text-right text-emerald-600 dark:text-emerald-400">
                         Showroom
+                      </TableHead>
+                      <TableHead className="text-center pr-6">
+                        Actions
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -269,8 +313,61 @@ export default function ProductList() {
                         <TableCell className="text-right tabular-nums text-amber-600 dark:text-amber-400">
                           ₹{fmt(p.retail_price)}
                         </TableCell>
-                        <TableCell className="text-right tabular-nums text-emerald-600 dark:text-emerald-400 pr-6">
+                        <TableCell className="text-right tabular-nums text-emerald-600 dark:text-emerald-400">
                           ₹{fmt(p.showroom_price)}
+                        </TableCell>
+                        <TableCell className="pr-6">
+                          <div className="flex items-center justify-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-primary"
+                              onClick={() => handleEdit(p.id)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground hover:text-red-500"
+                                  disabled={deletingId === p.id}
+                                >
+                                  {deletingId === p.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Delete Product
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete{" "}
+                                    <strong>
+                                      {p.model_number || "this product"}
+                                    </strong>
+                                    ? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-red-600 hover:bg-red-700 text-white"
+                                    onClick={() =>
+                                      handleDelete(p.id, p.model_number)
+                                    }
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
