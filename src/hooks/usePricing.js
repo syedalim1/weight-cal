@@ -20,8 +20,8 @@ export function usePricing() {
   const [sheetCost, setSheetCost] = useState("");
   const [pipeCost, setPipeCost] = useState("");
   const [totalPipeWeight, setTotalPipeWeight] = useState("");
-  const [ssPricePerKg, setSsPricePerKg] = useState("");
-  const [msPricePerKg, setMsPricePerKg] = useState("");
+  const [ssPricePerKg, setSsPricePerKg] = useState("260");
+  const [msPricePerKg, setMsPricePerKg] = useState("120");
 
   // Top Selection
   const [topType, setTopType] = useState("steel");
