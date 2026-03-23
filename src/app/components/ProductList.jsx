@@ -401,19 +401,19 @@ export default function ProductList() {
                         <div className="flex justify-between text-[10px]">
                           <span className="text-blue-600 dark:text-blue-400">Wholesale</span>
                           <span className="font-semibold tabular-nums">
-                            ₹{fmt((p.ss_total_cost || p.total_cost) * (1 + (p.wholesale_percent || 10) / 100))}
+                            ₹{fmt((p.ss_total_cost || p.total_cost) * (1 + (p.ss_wholesale_percent || 15) / 100))}
                           </span>
                         </div>
                         <div className="flex justify-between text-[10px]">
                           <span className="text-amber-600 dark:text-amber-400">Retail</span>
                           <span className="font-semibold tabular-nums">
-                            ₹{fmt((p.ss_total_cost || p.total_cost) * (1 + (p.retail_percent || 20) / 100))}
+                            ₹{fmt((p.ss_total_cost || p.total_cost) * (1 + (p.ss_retail_percent || 25) / 100))}
                           </span>
                         </div>
                         <div className="flex justify-between text-[10px]">
                           <span className="text-emerald-600 dark:text-emerald-400">Showroom</span>
                           <span className="font-semibold tabular-nums">
-                            ₹{fmt((p.ss_total_cost || p.total_cost) * (1 + (p.showroom_percent || 35) / 100))}
+                            ₹{fmt((p.ss_total_cost || p.total_cost) * (1 + (p.ss_showroom_percent || 45) / 100))}
                           </span>
                         </div>
                       </div>
@@ -442,19 +442,19 @@ export default function ProductList() {
                         <div className="flex justify-between text-[10px]">
                           <span className="text-blue-600 dark:text-blue-400">Wholesale</span>
                           <span className="font-semibold tabular-nums">
-                            ₹{fmt((p.ms_total_cost || p.total_cost) * (1 + (p.wholesale_percent || 10) / 100))}
+                            ₹{fmt((p.ms_total_cost || p.total_cost) * (1 + (p.ms_wholesale_percent || 12) / 100))}
                           </span>
                         </div>
                         <div className="flex justify-between text-[10px]">
                           <span className="text-amber-600 dark:text-amber-400">Retail</span>
                           <span className="font-semibold tabular-nums">
-                            ₹{fmt((p.ms_total_cost || p.total_cost) * (1 + (p.retail_percent || 20) / 100))}
+                            ₹{fmt((p.ms_total_cost || p.total_cost) * (1 + (p.ms_retail_percent || 20) / 100))}
                           </span>
                         </div>
                         <div className="flex justify-between text-[10px]">
                           <span className="text-emerald-600 dark:text-emerald-400">Showroom</span>
                           <span className="font-semibold tabular-nums">
-                            ₹{fmt((p.ms_total_cost || p.total_cost) * (1 + (p.showroom_percent || 35) / 100))}
+                            ₹{fmt((p.ms_total_cost || p.total_cost) * (1 + (p.ms_showroom_percent || 28) / 100))}
                           </span>
                         </div>
                       </div>

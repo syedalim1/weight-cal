@@ -602,7 +602,7 @@ export default function PricingCalculator() {
           <Button
             size="lg"
             className="px-8 py-6 text-lg font-semibold gap-2 transition-all hover:scale-105 active:scale-95 shadow-md disabled:hover:scale-100 disabled:opacity-75"
-            disabled={p.saving || p.totalCost <= 0 || isLoading}
+            disabled={p.saving || (p.totalCost <= 0 && p.ssTotalCost <= 0 && p.msTotalCost <= 0) || isLoading}
             onClick={async () => {
               const result = await p.saveProduct();
               if (result.success) {
@@ -628,73 +628,134 @@ export default function PricingCalculator() {
           </Button>
         </div>
 
-        {/* ── SECTION 7: Profit Percentages ── */}
-        <Card>
+        {/* ── SECTION 7: Profit Percentages (SS) ── */}
+        <Card className="border-sky-500/20">
           <CardContent className="pt-6 space-y-5">
             <SectionHeader
               icon={TrendingUp}
-              title="Profit Margins"
-              description="Set profit % for each pricing tier"
+              title="SS Profit Margins"
+              description="Stainless Steel: Wholesale 15%, Retail 25%, Showroom 45%"
             />
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="wholesale-pct" className="text-sm font-medium">
-                  Wholesale Profit %
+                <Label htmlFor="ss-wholesale-pct" className="text-sm font-medium">
+                  SS Wholesale %
                 </Label>
                 <div className="relative">
                   <Input
-                    id="wholesale-pct"
+                    id="ss-wholesale-pct"
                     type="number"
                     min="0"
                     step="any"
-                    placeholder="10"
-                    value={p.wholesalePercent}
-                    onChange={(e) => p.setWholesalePercent(e.target.value)}
+                    placeholder="15"
+                    value={p.ssWholesalePercent}
+                    onChange={(e) => p.setSsWholesalePercent(e.target.value)}
                     className="pr-7 tabular-nums"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                    %
-                  </span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="retail-pct" className="text-sm font-medium">
-                  Retail Profit %
+                <Label htmlFor="ss-retail-pct" className="text-sm font-medium">
+                  SS Retail %
                 </Label>
                 <div className="relative">
                   <Input
-                    id="retail-pct"
+                    id="ss-retail-pct"
+                    type="number"
+                    min="0"
+                    step="any"
+                    placeholder="25"
+                    value={p.ssRetailPercent}
+                    onChange={(e) => p.setSsRetailPercent(e.target.value)}
+                    className="pr-7 tabular-nums"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ss-showroom-pct" className="text-sm font-medium">
+                  SS Showroom %
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="ss-showroom-pct"
+                    type="number"
+                    min="0"
+                    step="any"
+                    placeholder="45"
+                    value={p.ssShowroomPercent}
+                    onChange={(e) => p.setSsShowroomPercent(e.target.value)}
+                    className="pr-7 tabular-nums"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── SECTION 8: Profit Percentages (MS) ── */}
+        <Card className="border-orange-500/20">
+          <CardContent className="pt-6 space-y-5">
+            <SectionHeader
+              icon={TrendingUp}
+              title="MS Profit Margins"
+              description="Mild Steel: Wholesale 12%, Retail 20%, Showroom 28%"
+            />
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="ms-wholesale-pct" className="text-sm font-medium">
+                  MS Wholesale %
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="ms-wholesale-pct"
+                    type="number"
+                    min="0"
+                    step="any"
+                    placeholder="12"
+                    value={p.msWholesalePercent}
+                    onChange={(e) => p.setMsWholesalePercent(e.target.value)}
+                    className="pr-7 tabular-nums"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ms-retail-pct" className="text-sm font-medium">
+                  MS Retail %
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="ms-retail-pct"
                     type="number"
                     min="0"
                     step="any"
                     placeholder="20"
-                    value={p.retailPercent}
-                    onChange={(e) => p.setRetailPercent(e.target.value)}
+                    value={p.msRetailPercent}
+                    onChange={(e) => p.setMsRetailPercent(e.target.value)}
                     className="pr-7 tabular-nums"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                    %
-                  </span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="showroom-pct" className="text-sm font-medium">
-                  Showroom Profit %
+                <Label htmlFor="ms-showroom-pct" className="text-sm font-medium">
+                  MS Showroom %
                 </Label>
                 <div className="relative">
                   <Input
-                    id="showroom-pct"
+                    id="ms-showroom-pct"
                     type="number"
                     min="0"
                     step="any"
-                    placeholder="35"
-                    value={p.showroomPercent}
-                    onChange={(e) => p.setShowroomPercent(e.target.value)}
+                    placeholder="28"
+                    value={p.msShowroomPercent}
+                    onChange={(e) => p.setMsShowroomPercent(e.target.value)}
                     className="pr-7 tabular-nums"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                    %
-                  </span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
                 </div>
               </div>
             </div>
@@ -714,21 +775,21 @@ export default function PricingCalculator() {
                 <CardContent className="pt-6 text-center space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Wholesale</p>
                   <p className="text-2xl font-bold tabular-nums">₹{fmt(p.ssWholesalePrice)}</p>
-                  <Badge variant="outline" className="border-blue-500/40 text-blue-600 dark:text-blue-400">+{p.wholesalePercent || 0}%</Badge>
+                  <Badge variant="outline" className="border-blue-500/40 text-blue-600 dark:text-blue-400">+{p.ssWholesalePercent || 0}%</Badge>
                 </CardContent>
               </Card>
               <Card className="border-amber-500/30 bg-gradient-to-b from-amber-500/5 to-transparent">
                 <CardContent className="pt-6 text-center space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Retail</p>
                   <p className="text-2xl font-bold tabular-nums">₹{fmt(p.ssRetailPrice)}</p>
-                  <Badge variant="outline" className="border-amber-500/40 text-amber-600 dark:text-amber-400">+{p.retailPercent || 0}%</Badge>
+                  <Badge variant="outline" className="border-amber-500/40 text-amber-600 dark:text-amber-400">+{p.ssRetailPercent || 0}%</Badge>
                 </CardContent>
               </Card>
               <Card className="border-emerald-500/30 bg-gradient-to-b from-emerald-500/5 to-transparent">
                 <CardContent className="pt-6 text-center space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Showroom</p>
                   <p className="text-2xl font-bold tabular-nums">₹{fmt(p.ssShowroomPrice)}</p>
-                  <Badge variant="outline" className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400">+{p.showroomPercent || 0}%</Badge>
+                  <Badge variant="outline" className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400">+{p.ssShowroomPercent || 0}%</Badge>
                 </CardContent>
               </Card>
             </div>
@@ -747,21 +808,21 @@ export default function PricingCalculator() {
                 <CardContent className="pt-6 text-center space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Wholesale</p>
                   <p className="text-2xl font-bold tabular-nums">₹{fmt(p.msWholesalePrice)}</p>
-                  <Badge variant="outline" className="border-blue-500/40 text-blue-600 dark:text-blue-400">+{p.wholesalePercent || 0}%</Badge>
+                  <Badge variant="outline" className="border-blue-500/40 text-blue-600 dark:text-blue-400">+{p.msWholesalePercent || 0}%</Badge>
                 </CardContent>
               </Card>
               <Card className="border-amber-500/30 bg-gradient-to-b from-amber-500/5 to-transparent">
                 <CardContent className="pt-6 text-center space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Retail</p>
                   <p className="text-2xl font-bold tabular-nums">₹{fmt(p.msRetailPrice)}</p>
-                  <Badge variant="outline" className="border-amber-500/40 text-amber-600 dark:text-amber-400">+{p.retailPercent || 0}%</Badge>
+                  <Badge variant="outline" className="border-amber-500/40 text-amber-600 dark:text-amber-400">+{p.msRetailPercent || 0}%</Badge>
                 </CardContent>
               </Card>
               <Card className="border-emerald-500/30 bg-gradient-to-b from-emerald-500/5 to-transparent">
                 <CardContent className="pt-6 text-center space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Showroom</p>
                   <p className="text-2xl font-bold tabular-nums">₹{fmt(p.msShowroomPrice)}</p>
-                  <Badge variant="outline" className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400">+{p.showroomPercent || 0}%</Badge>
+                  <Badge variant="outline" className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400">+{p.msShowroomPercent || 0}%</Badge>
                 </CardContent>
               </Card>
             </div>

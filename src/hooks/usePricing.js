@@ -43,10 +43,15 @@ export function usePricing() {
   const [electricityCost, setElectricityCost] = useState("");
   const [machineCost, setMachineCost] = useState("");
 
-  // Profit Percentages
-  const [wholesalePercent, setWholesalePercent] = useState("10");
-  const [retailPercent, setRetailPercent] = useState("20");
-  const [showroomPercent, setShowroomPercent] = useState("35");
+  // Profit Percentages (SS)
+  const [ssWholesalePercent, setSsWholesalePercent] = useState("15");
+  const [ssRetailPercent, setSsRetailPercent] = useState("25");
+  const [ssShowroomPercent, setSsShowroomPercent] = useState("45");
+
+  // Profit Percentages (MS)
+  const [msWholesalePercent, setMsWholesalePercent] = useState("12");
+  const [msRetailPercent, setMsRetailPercent] = useState("20");
+  const [msShowroomPercent, setMsShowroomPercent] = useState("28");
 
   // Custom Price Validation
   const [customPrice, setCustomPrice] = useState("");
@@ -102,9 +107,12 @@ export function usePricing() {
     setWeldingCost(toStr(data.welding_cost));
     setElectricityCost(toStr(data.electricity_cost));
     setMachineCost(toStr(data.machine_cost));
-    setWholesalePercent(toStr(data.wholesale_percent) || "10");
-    setRetailPercent(toStr(data.retail_percent) || "20");
-    setShowroomPercent(toStr(data.showroom_percent) || "35");
+    setSsWholesalePercent(toStr(data.ss_wholesale_percent) || "15");
+    setSsRetailPercent(toStr(data.ss_retail_percent) || "25");
+    setSsShowroomPercent(toStr(data.ss_showroom_percent) || "45");
+    setMsWholesalePercent(toStr(data.ms_wholesale_percent) || "12");
+    setMsRetailPercent(toStr(data.ms_retail_percent) || "20");
+    setMsShowroomPercent(toStr(data.ms_showroom_percent) || "28");
 
     setLoadingProduct(false);
     return { success: true };
@@ -167,19 +175,20 @@ export function usePricing() {
   // Helper for tier pricing
   const tierPrice = (total, pct) => total + total * (num(pct) / 100);
 
-  const wholesalePrice = useMemo(() => tierPrice(totalCost, wholesalePercent), [totalCost, wholesalePercent]);
-  const retailPrice = useMemo(() => tierPrice(totalCost, retailPercent), [totalCost, retailPercent]);
-  const showroomPrice = useMemo(() => tierPrice(totalCost, showroomPercent), [totalCost, showroomPercent]);
+  // General total pricing (uses SS percentages as default)
+  const wholesalePrice = useMemo(() => tierPrice(totalCost, ssWholesalePercent), [totalCost, ssWholesalePercent]);
+  const retailPrice = useMemo(() => tierPrice(totalCost, ssRetailPercent), [totalCost, ssRetailPercent]);
+  const showroomPrice = useMemo(() => tierPrice(totalCost, ssShowroomPercent), [totalCost, ssShowroomPercent]);
 
   // SS Tier pricing
-  const ssWholesalePrice = useMemo(() => tierPrice(ssTotalCost, wholesalePercent), [ssTotalCost, wholesalePercent]);
-  const ssRetailPrice = useMemo(() => tierPrice(ssTotalCost, retailPercent), [ssTotalCost, retailPercent]);
-  const ssShowroomPrice = useMemo(() => tierPrice(ssTotalCost, showroomPercent), [ssTotalCost, showroomPercent]);
+  const ssWholesalePrice = useMemo(() => tierPrice(ssTotalCost, ssWholesalePercent), [ssTotalCost, ssWholesalePercent]);
+  const ssRetailPrice = useMemo(() => tierPrice(ssTotalCost, ssRetailPercent), [ssTotalCost, ssRetailPercent]);
+  const ssShowroomPrice = useMemo(() => tierPrice(ssTotalCost, ssShowroomPercent), [ssTotalCost, ssShowroomPercent]);
 
   // MS Tier pricing
-  const msWholesalePrice = useMemo(() => tierPrice(msTotalCost, wholesalePercent), [msTotalCost, wholesalePercent]);
-  const msRetailPrice = useMemo(() => tierPrice(msTotalCost, retailPercent), [msTotalCost, retailPercent]);
-  const msShowroomPrice = useMemo(() => tierPrice(msTotalCost, showroomPercent), [msTotalCost, showroomPercent]);
+  const msWholesalePrice = useMemo(() => tierPrice(msTotalCost, msWholesalePercent), [msTotalCost, msWholesalePercent]);
+  const msRetailPrice = useMemo(() => tierPrice(msTotalCost, msRetailPercent), [msTotalCost, msRetailPercent]);
+  const msShowroomPrice = useMemo(() => tierPrice(msTotalCost, msShowroomPercent), [msTotalCost, msShowroomPercent]);
 
   const priceStatus = useMemo(() => {
     const cp = num(customPrice);
@@ -218,9 +227,12 @@ export function usePricing() {
     electricity_cost: num(electricityCost),
     machine_cost: num(machineCost),
     total_cost: totalCost,
-    wholesale_percent: num(wholesalePercent),
-    retail_percent: num(retailPercent),
-    showroom_percent: num(showroomPercent),
+    ss_wholesale_percent: num(ssWholesalePercent),
+    ss_retail_percent: num(ssRetailPercent),
+    ss_showroom_percent: num(ssShowroomPercent),
+    ms_wholesale_percent: num(msWholesalePercent),
+    ms_retail_percent: num(msRetailPercent),
+    ms_showroom_percent: num(msShowroomPercent),
     wholesale_price: wholesalePrice,
     retail_price: retailPrice,
     showroom_price: showroomPrice,
@@ -273,7 +285,8 @@ export function usePricing() {
     totalCost, ssTotalCost, msTotalCost,
     ssPricePerKg, msPricePerKg, ssPipeCost, msPipeCost,
     totalPipeWeight,
-    wholesalePercent, retailPercent, showroomPercent,
+    ssWholesalePercent, ssRetailPercent, ssShowroomPercent,
+    msWholesalePercent, msRetailPercent, msShowroomPercent,
     wholesalePrice, retailPrice, showroomPrice,
   ]);
 
@@ -314,9 +327,12 @@ export function usePricing() {
     electricityCost, setElectricityCost,
     machineCost, setMachineCost,
     // Profit
-    wholesalePercent, setWholesalePercent,
-    retailPercent, setRetailPercent,
-    showroomPercent, setShowroomPercent,
+    ssWholesalePercent, setSsWholesalePercent,
+    ssRetailPercent, setSsRetailPercent,
+    ssShowroomPercent, setSsShowroomPercent,
+    msWholesalePercent, setMsWholesalePercent,
+    msRetailPercent, setMsRetailPercent,
+    msShowroomPercent, setMsShowroomPercent,
     // Custom Price
     customPrice, setCustomPrice,
     // Derived
