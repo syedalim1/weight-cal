@@ -255,22 +255,38 @@ export default function PricingCalculator() {
                 suffix="kg"
               />
               <NumberInput
-                label="Pipe Price per kg"
-                value={p.pipePricePerKg}
-                onChange={p.setPipePricePerKg}
-                placeholder="e.g. 120"
-                id="pipe-price-per-kg"
+                label="SS Price/kg"
+                value={p.ssPricePerKg}
+                onChange={p.setSsPricePerKg}
+                placeholder="e.g. 260"
+                id="ss-price-per-kg"
                 prefix="₹"
                 suffix="/kg"
               />
               <NumberInput
-                label="Pipe Cost (Total)"
-                value={p.pipeCost}
-                onChange={p.setPipeCost}
-                placeholder="Auto or manual"
-                id="pipe-cost"
+                label="MS Price/kg"
+                value={p.msPricePerKg}
+                onChange={p.setMsPricePerKg}
+                placeholder="e.g. 120"
+                id="ms-price-per-kg"
+                prefix="₹"
+                suffix="/kg"
               />
             </div>
+
+            {/* SS vs MS Pipe Cost Comparison */}
+            {(p.ssPipeCost > 0 || p.msPipeCost > 0) && (
+              <div className="grid gap-3 sm:grid-cols-2 mt-4">
+                <div className="flex items-center justify-between p-3 rounded-lg border border-sky-500/30 bg-sky-500/5">
+                  <span className="text-sm font-medium text-sky-700 dark:text-sky-300">SS Pipe Cost</span>
+                  <span className="text-lg font-bold tabular-nums">₹{fmt(p.ssPipeCost)}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg border border-orange-500/30 bg-orange-500/5">
+                  <span className="text-sm font-medium text-orange-700 dark:text-orange-300">MS Pipe Cost</span>
+                  <span className="text-lg font-bold tabular-nums">₹{fmt(p.msPipeCost)}</span>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -524,45 +540,56 @@ export default function PricingCalculator() {
           </CardContent>
         </Card>
 
-        {/* ── TOTAL COST DISPLAY ── */}
-        <Card className="border-primary/30 bg-gradient-to-r from-primary/5 via-transparent to-primary/5">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+        {/* ── TOTAL COST DISPLAY (SS vs MS) ── */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          {/* SS Total */}
+          <Card className="border-sky-500/30 bg-gradient-to-r from-sky-500/5 via-transparent to-sky-500/5">
+            <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-primary/10">
-                  <CircleDollarSign className="h-6 w-6 text-primary" />
+                <div className="p-2.5 rounded-xl bg-sky-500/10">
+                  <CircleDollarSign className="h-6 w-6 text-sky-600 dark:text-sky-400" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground font-medium uppercase tracking-wide">
-                    Total Manufacturing Cost
+                    SS Total Cost
                   </p>
-                  <p className="text-4xl font-bold tracking-tight tabular-nums">
-                    ₹{fmt(p.totalCost)}
+                  <p className="text-3xl font-bold tracking-tight tabular-nums">
+                    ₹{fmt(p.ssTotalCost)}
                   </p>
+                  {p.ssPipeCost > 0 && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Pipe: ₹{fmt(p.ssPipeCost)} ({p.ssPricePerKg}/kg × {p.totalPipeWeight}kg)
+                    </p>
+                  )}
                 </div>
               </div>
-              {p.totalCost > 0 && (
-                <Badge variant="secondary" className="text-sm px-3 py-1">
-                  {[
-                    p.pipeCost && "Pipe",
-                    p.sheetCost && "Sheet",
-                    p.topCost && "Top",
-                    p.seatCost && "Seat",
-                    p.finishCost && "Finish",
-                    (p.labourCost ||
-                      p.weldingCost ||
-                      p.electricityCost ||
-                      p.machineCost) &&
-                      "Labour",
-                  ]
-                    .filter(Boolean)
-                    .length}{" "}
-                  cost groups
-                </Badge>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          {/* MS Total */}
+          <Card className="border-orange-500/30 bg-gradient-to-r from-orange-500/5 via-transparent to-orange-500/5">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-orange-500/10">
+                  <CircleDollarSign className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground font-medium uppercase tracking-wide">
+                    MS Total Cost
+                  </p>
+                  <p className="text-3xl font-bold tracking-tight tabular-nums">
+                    ₹{fmt(p.msTotalCost)}
+                  </p>
+                  {p.msPipeCost > 0 && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Pipe: ₹{fmt(p.msPipeCost)} ({p.msPricePerKg}/kg × {p.totalPipeWeight}kg)
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* ── SAVE PRODUCT BUTTON ── */}
         <div className="flex justify-center flex-col items-center gap-2">
@@ -674,68 +701,71 @@ export default function PricingCalculator() {
           </CardContent>
         </Card>
 
-        {/* ── PRICING SUMMARY (3 Tiers) ── */}
-        <div className="grid gap-4 sm:grid-cols-3">
-          {/* Wholesale */}
-          <Card className="border-blue-500/30 bg-gradient-to-b from-blue-500/5 to-transparent">
-            <CardContent className="pt-6 text-center space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
-                Wholesale Price
-              </p>
-              <p className="text-sm text-muted-foreground">Minimum safe price</p>
-              <p className="text-3xl font-bold tabular-nums">
-                ₹{fmt(p.wholesalePrice)}
-              </p>
-              <Badge
-                variant="outline"
-                className="border-blue-500/40 text-blue-600 dark:text-blue-400"
-              >
-                +{p.wholesalePercent || 0}% margin
-              </Badge>
-            </CardContent>
-          </Card>
+        {/* ── PRICING SUMMARY (SS vs MS side by side) ── */}
+        <div className="space-y-4">
+          {/* SS Pricing */}
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-sky-600 dark:text-sky-400 mb-3 flex items-center gap-2">
+              <span className="inline-block w-3 h-3 rounded-full bg-sky-500" />
+              SS (Stainless Steel) Pricing
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Card className="border-blue-500/30 bg-gradient-to-b from-blue-500/5 to-transparent">
+                <CardContent className="pt-6 text-center space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Wholesale</p>
+                  <p className="text-2xl font-bold tabular-nums">₹{fmt(p.ssWholesalePrice)}</p>
+                  <Badge variant="outline" className="border-blue-500/40 text-blue-600 dark:text-blue-400">+{p.wholesalePercent || 0}%</Badge>
+                </CardContent>
+              </Card>
+              <Card className="border-amber-500/30 bg-gradient-to-b from-amber-500/5 to-transparent">
+                <CardContent className="pt-6 text-center space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Retail</p>
+                  <p className="text-2xl font-bold tabular-nums">₹{fmt(p.ssRetailPrice)}</p>
+                  <Badge variant="outline" className="border-amber-500/40 text-amber-600 dark:text-amber-400">+{p.retailPercent || 0}%</Badge>
+                </CardContent>
+              </Card>
+              <Card className="border-emerald-500/30 bg-gradient-to-b from-emerald-500/5 to-transparent">
+                <CardContent className="pt-6 text-center space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Showroom</p>
+                  <p className="text-2xl font-bold tabular-nums">₹{fmt(p.ssShowroomPrice)}</p>
+                  <Badge variant="outline" className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400">+{p.showroomPercent || 0}%</Badge>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
 
-          {/* Retail */}
-          <Card className="border-amber-500/30 bg-gradient-to-b from-amber-500/5 to-transparent">
-            <CardContent className="pt-6 text-center space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                Retail Price
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Minimum selling price
-              </p>
-              <p className="text-3xl font-bold tabular-nums">
-                ₹{fmt(p.retailPrice)}
-              </p>
-              <Badge
-                variant="outline"
-                className="border-amber-500/40 text-amber-600 dark:text-amber-400"
-              >
-                +{p.retailPercent || 0}% margin
-              </Badge>
-            </CardContent>
-          </Card>
+          <Separator />
 
-          {/* Showroom */}
-          <Card className="border-emerald-500/30 bg-gradient-to-b from-emerald-500/5 to-transparent">
-            <CardContent className="pt-6 text-center space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                Showroom Price
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Maximum display price
-              </p>
-              <p className="text-3xl font-bold tabular-nums">
-                ₹{fmt(p.showroomPrice)}
-              </p>
-              <Badge
-                variant="outline"
-                className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
-              >
-                +{p.showroomPercent || 0}% margin
-              </Badge>
-            </CardContent>
-          </Card>
+          {/* MS Pricing */}
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-orange-600 dark:text-orange-400 mb-3 flex items-center gap-2">
+              <span className="inline-block w-3 h-3 rounded-full bg-orange-500" />
+              MS (Mild Steel) Pricing
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Card className="border-blue-500/30 bg-gradient-to-b from-blue-500/5 to-transparent">
+                <CardContent className="pt-6 text-center space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Wholesale</p>
+                  <p className="text-2xl font-bold tabular-nums">₹{fmt(p.msWholesalePrice)}</p>
+                  <Badge variant="outline" className="border-blue-500/40 text-blue-600 dark:text-blue-400">+{p.wholesalePercent || 0}%</Badge>
+                </CardContent>
+              </Card>
+              <Card className="border-amber-500/30 bg-gradient-to-b from-amber-500/5 to-transparent">
+                <CardContent className="pt-6 text-center space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Retail</p>
+                  <p className="text-2xl font-bold tabular-nums">₹{fmt(p.msRetailPrice)}</p>
+                  <Badge variant="outline" className="border-amber-500/40 text-amber-600 dark:text-amber-400">+{p.retailPercent || 0}%</Badge>
+                </CardContent>
+              </Card>
+              <Card className="border-emerald-500/30 bg-gradient-to-b from-emerald-500/5 to-transparent">
+                <CardContent className="pt-6 text-center space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Showroom</p>
+                  <p className="text-2xl font-bold tabular-nums">₹{fmt(p.msShowroomPrice)}</p>
+                  <Badge variant="outline" className="border-emerald-500/40 text-emerald-600 dark:text-emerald-400">+{p.showroomPercent || 0}%</Badge>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
 
         {/* ── CUSTOM PRICE VALIDATION ── */}

@@ -20,7 +20,8 @@ export function usePricing() {
   const [sheetCost, setSheetCost] = useState("");
   const [pipeCost, setPipeCost] = useState("");
   const [totalPipeWeight, setTotalPipeWeight] = useState("");
-  const [pipePricePerKg, setPipePricePerKg] = useState("");
+  const [ssPricePerKg, setSsPricePerKg] = useState("");
+  const [msPricePerKg, setMsPricePerKg] = useState("");
 
   // Top Selection
   const [topType, setTopType] = useState("steel");
@@ -87,7 +88,8 @@ export function usePricing() {
     setSheetCost(toStr(data.sheet_cost));
     setPipeCost(toStr(data.pipe_cost));
     setTotalPipeWeight(toStr(data.total_pipe_weight));
-    setPipePricePerKg(toStr(data.pipe_price_per_kg));
+    setSsPricePerKg(toStr(data.ss_price_per_kg));
+    setMsPricePerKg(toStr(data.ms_price_per_kg));
     setTopType(data.top_type || "steel");
     setTopCost(toStr(data.top_cost));
     setGraniteColor(data.granite_color || "black");
@@ -108,21 +110,34 @@ export function usePricing() {
     return { success: true };
   }, []);
 
-  // Auto-calculate Pipe Cost when Total Weight or Price/kg changes
+  // Auto-calculate Pipe Cost based on active material type
+  const ssPipeCost = useMemo(() => {
+    const w = num(totalPipeWeight);
+    const r = num(ssPricePerKg);
+    return w > 0 && r > 0 ? w * r : 0;
+  }, [totalPipeWeight, ssPricePerKg]);
+
+  const msPipeCost = useMemo(() => {
+    const w = num(totalPipeWeight);
+    const r = num(msPricePerKg);
+    return w > 0 && r > 0 ? w * r : 0;
+  }, [totalPipeWeight, msPricePerKg]);
+
+  // Auto-fill pipeCost from active material selection
   useEffect(() => {
-    if (totalPipeWeight !== "" && pipePricePerKg !== "") {
-      const weight = num(totalPipeWeight);
-      const rate = num(pipePricePerKg);
-      if (weight > 0 && rate > 0) {
-        setPipeCost((weight * rate).toFixed(2));
+    if (num(totalPipeWeight) > 0) {
+      if (materialType === "ss" && num(ssPricePerKg) > 0) {
+        setPipeCost(ssPipeCost.toFixed(2));
+      } else if (materialType === "ms" && num(msPricePerKg) > 0) {
+        setPipeCost(msPipeCost.toFixed(2));
       }
     }
-  }, [totalPipeWeight, pipePricePerKg]);
+  }, [totalPipeWeight, ssPricePerKg, msPricePerKg, materialType, ssPipeCost, msPipeCost]);
 
-  // Derived calculations
-  const totalCost = useMemo(() => {
+  // Helper: compute total cost for a given pipe cost
+  const computeTotal = (pipeCostVal) => {
     return (
-      num(pipeCost) +
+      pipeCostVal +
       num(sheetCost) +
       num(topCost) +
       num(seatCost) +
@@ -132,19 +147,39 @@ export function usePricing() {
       num(electricityCost) +
       num(machineCost)
     );
-  }, [pipeCost, sheetCost, topCost, seatCost, finishCost, labourCost, weldingCost, electricityCost, machineCost]);
+  };
+  // Derived calculations
+  const totalCost = useMemo(() => computeTotal(num(pipeCost)),
+    [pipeCost, sheetCost, topCost, seatCost, finishCost, labourCost, weldingCost, electricityCost, machineCost]);
 
-  const wholesalePrice = useMemo(() => {
-    return totalCost + totalCost * (num(wholesalePercent) / 100);
-  }, [totalCost, wholesalePercent]);
+  // SS Total
+  const ssTotalCost = useMemo(() => {
+    const ssPipe = ssPipeCost > 0 ? ssPipeCost : num(pipeCost);
+    return computeTotal(ssPipe);
+  }, [ssPipeCost, pipeCost, sheetCost, topCost, seatCost, finishCost, labourCost, weldingCost, electricityCost, machineCost]);
 
-  const retailPrice = useMemo(() => {
-    return totalCost + totalCost * (num(retailPercent) / 100);
-  }, [totalCost, retailPercent]);
+  // MS Total
+  const msTotalCost = useMemo(() => {
+    const msPipe = msPipeCost > 0 ? msPipeCost : num(pipeCost);
+    return computeTotal(msPipe);
+  }, [msPipeCost, pipeCost, sheetCost, topCost, seatCost, finishCost, labourCost, weldingCost, electricityCost, machineCost]);
 
-  const showroomPrice = useMemo(() => {
-    return totalCost + totalCost * (num(showroomPercent) / 100);
-  }, [totalCost, showroomPercent]);
+  // Helper for tier pricing
+  const tierPrice = (total, pct) => total + total * (num(pct) / 100);
+
+  const wholesalePrice = useMemo(() => tierPrice(totalCost, wholesalePercent), [totalCost, wholesalePercent]);
+  const retailPrice = useMemo(() => tierPrice(totalCost, retailPercent), [totalCost, retailPercent]);
+  const showroomPrice = useMemo(() => tierPrice(totalCost, showroomPercent), [totalCost, showroomPercent]);
+
+  // SS Tier pricing
+  const ssWholesalePrice = useMemo(() => tierPrice(ssTotalCost, wholesalePercent), [ssTotalCost, wholesalePercent]);
+  const ssRetailPrice = useMemo(() => tierPrice(ssTotalCost, retailPercent), [ssTotalCost, retailPercent]);
+  const ssShowroomPrice = useMemo(() => tierPrice(ssTotalCost, showroomPercent), [ssTotalCost, showroomPercent]);
+
+  // MS Tier pricing
+  const msWholesalePrice = useMemo(() => tierPrice(msTotalCost, wholesalePercent), [msTotalCost, wholesalePercent]);
+  const msRetailPrice = useMemo(() => tierPrice(msTotalCost, retailPercent), [msTotalCost, retailPercent]);
+  const msShowroomPrice = useMemo(() => tierPrice(msTotalCost, showroomPercent), [msTotalCost, showroomPercent]);
 
   const priceStatus = useMemo(() => {
     const cp = num(customPrice);
@@ -164,7 +199,12 @@ export function usePricing() {
     sheet_cost: num(sheetCost),
     pipe_cost: num(pipeCost),
     total_pipe_weight: num(totalPipeWeight),
-    pipe_price_per_kg: num(pipePricePerKg),
+    ss_price_per_kg: num(ssPricePerKg),
+    ms_price_per_kg: num(msPricePerKg),
+    ss_pipe_cost: ssPipeCost,
+    ms_pipe_cost: msPipeCost,
+    ss_total_cost: ssTotalCost,
+    ms_total_cost: msTotalCost,
     top_type: topType,
     top_cost: num(topCost),
     granite_color: topType === "granite" ? graniteColor : null,
@@ -250,7 +290,10 @@ export function usePricing() {
     sheetCost, setSheetCost,
     pipeCost, setPipeCost,
     totalPipeWeight, setTotalPipeWeight,
-    pipePricePerKg, setPipePricePerKg,
+    ssPricePerKg, setSsPricePerKg,
+    msPricePerKg, setMsPricePerKg,
+    ssPipeCost,
+    msPipeCost,
     // Top
     topType, setTopType,
     topCost, setTopCost,
@@ -275,9 +318,13 @@ export function usePricing() {
     customPrice, setCustomPrice,
     // Derived
     totalCost,
+    ssTotalCost,
+    msTotalCost,
     wholesalePrice,
     retailPrice,
     showroomPrice,
+    ssWholesalePrice, ssRetailPrice, ssShowroomPrice,
+    msWholesalePrice, msRetailPrice, msShowroomPrice,
     priceStatus,
     // Save
     saveProduct,
