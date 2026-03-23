@@ -50,16 +50,18 @@ function SectionHeader({ icon: Icon, title, description }) {
   );
 }
 
-function NumberInput({ label, value, onChange, placeholder, id }) {
+function NumberInput({ label, value, onChange, placeholder, id, prefix = "₹", suffix }) {
   return (
     <div className="space-y-2">
       <Label htmlFor={id} className="text-sm font-medium">
         {label}
       </Label>
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-          ₹
-        </span>
+        {prefix && (
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+            {prefix}
+          </span>
+        )}
         <Input
           id={id}
           type="number"
@@ -68,8 +70,13 @@ function NumberInput({ label, value, onChange, placeholder, id }) {
           placeholder={placeholder || "0"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="pl-7 tabular-nums"
+          className={`${prefix ? "pl-7" : ""} ${suffix ? "pr-9" : ""} tabular-nums`}
         />
+        {suffix && (
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+            {suffix}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -205,7 +212,7 @@ export default function PricingCalculator() {
               title="Size & Base Costs"
               description="Dimensions, sheet cost and pipe cost"
             />
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="width" className="text-sm font-medium">
                   Width
@@ -239,7 +246,25 @@ export default function PricingCalculator() {
                 id="sheet-cost"
               />
               <NumberInput
-                label="Pipe Cost"
+                label="Total Pipe Weight"
+                value={p.totalPipeWeight}
+                onChange={p.setTotalPipeWeight}
+                placeholder="e.g. 15.5 kg"
+                id="total-pipe-weight"
+                prefix=""
+                suffix="kg"
+              />
+              <NumberInput
+                label="Pipe Price per kg"
+                value={p.pipePricePerKg}
+                onChange={p.setPipePricePerKg}
+                placeholder="e.g. 120"
+                id="pipe-price-per-kg"
+                prefix="₹"
+                suffix="/kg"
+              />
+              <NumberInput
+                label="Pipe Cost (Total)"
                 value={p.pipeCost}
                 onChange={p.setPipeCost}
                 placeholder="Auto or manual"

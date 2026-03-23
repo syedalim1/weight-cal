@@ -1,9 +1,14 @@
-import MSPipeCalculator from "../components/MSPipeCalculator";
+import Calculator from "../components/Calculator";
 
 export default function MSPipeCalculatorPage() {
   return (
     <div className="">
-      <MSPipeCalculator />
+      <Calculator 
+        defaultMaterial="carbon-steel"
+        defaultPrice={120}
+        title="MS Weight Calculator"
+        description="Calculate accurate mild steel (MS) weight and rates."
+      />
     </div>
   );
 }

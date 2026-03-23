@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { supabase } from "@/lib/supabase.js";
 
 export function usePricing() {
@@ -19,6 +19,8 @@ export function usePricing() {
   // Cost Inputs
   const [sheetCost, setSheetCost] = useState("");
   const [pipeCost, setPipeCost] = useState("");
+  const [totalPipeWeight, setTotalPipeWeight] = useState("");
+  const [pipePricePerKg, setPipePricePerKg] = useState("");
 
   // Top Selection
   const [topType, setTopType] = useState("steel");
@@ -84,6 +86,8 @@ export function usePricing() {
     setLength(toStr(data.length));
     setSheetCost(toStr(data.sheet_cost));
     setPipeCost(toStr(data.pipe_cost));
+    setTotalPipeWeight(toStr(data.total_pipe_weight));
+    setPipePricePerKg(toStr(data.pipe_price_per_kg));
     setTopType(data.top_type || "steel");
     setTopCost(toStr(data.top_cost));
     setGraniteColor(data.granite_color || "black");
@@ -103,6 +107,17 @@ export function usePricing() {
     setLoadingProduct(false);
     return { success: true };
   }, []);
+
+  // Auto-calculate Pipe Cost when Total Weight or Price/kg changes
+  useEffect(() => {
+    if (totalPipeWeight !== "" && pipePricePerKg !== "") {
+      const weight = num(totalPipeWeight);
+      const rate = num(pipePricePerKg);
+      if (weight > 0 && rate > 0) {
+        setPipeCost((weight * rate).toFixed(2));
+      }
+    }
+  }, [totalPipeWeight, pipePricePerKg]);
 
   // Derived calculations
   const totalCost = useMemo(() => {
@@ -148,6 +163,8 @@ export function usePricing() {
     length: num(length) || null,
     sheet_cost: num(sheetCost),
     pipe_cost: num(pipeCost),
+    total_pipe_weight: num(totalPipeWeight),
+    pipe_price_per_kg: num(pipePricePerKg),
     top_type: topType,
     top_cost: num(topCost),
     granite_color: topType === "granite" ? graniteColor : null,
@@ -232,6 +249,8 @@ export function usePricing() {
     // Cost Inputs
     sheetCost, setSheetCost,
     pipeCost, setPipeCost,
+    totalPipeWeight, setTotalPipeWeight,
+    pipePricePerKg, setPipePricePerKg,
     // Top
     topType, setTopType,
     topCost, setTopCost,

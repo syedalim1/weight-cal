@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 
-export const useSettings = () => {
-  const [pricePerKg, setPricePerKg] = useState(260);
-  const [material, setMaterial] = useState("stainless-steel");
+export const useSettings = (initialMaterial = "stainless-steel", initialPrice = 260) => {
+  const [pricePerKg, setPricePerKg] = useState(initialPrice);
+  const [material, setMaterial] = useState(initialMaterial);
   const [unitSystem, setUnitSystem] = useState("imperial");
   const [weightUnit, setWeightUnit] = useState("kg");
   const [customMaterials, setCustomMaterials] = useState([]);

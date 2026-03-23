@@ -22,8 +22,8 @@ const thicknessOptions = {
 
 const getMaterialDensity = (material) => {
   const densities = {
-    "stainless-steel": 7.85,
-    "carbon-steel": 7.85,
+    "stainless-steel": 7.95, // Accurate SS 304 density
+    "carbon-steel": 7.85,    // MS density
     aluminum: 2.7,
     copper: 8.96,
     brass: 8.5,
@@ -288,7 +288,7 @@ export const useTubes = (material) => {
       thickness: parseFloat(thickness),
       length: parseFloat(length),
       quantity: parseFloat(quantity),
-      weightPerTube: parseFloat(weightPerTube.toFixed(2)),
+      weightPerTube: parseFloat(weightPerTube.toFixed(3)),
     };
 
     setTubes([...tubes, newTube]);
@@ -339,7 +339,7 @@ export const useTubes = (material) => {
     updatedTube.quantity = parseFloat(quantity);
 
     const weightPerTube = calculateWeight(updatedTube);
-    updatedTube.weightPerTube = parseFloat(weightPerTube.toFixed(2));
+    updatedTube.weightPerTube = parseFloat(weightPerTube.toFixed(3));
 
     setTubes(tubes.map((t) => (t.id === editingTube.id ? updatedTube : t)));
     setEditingTube(null);

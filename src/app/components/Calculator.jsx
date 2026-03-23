@@ -21,9 +21,14 @@ import SettingsTab from "./SettingsTab.jsx";
 
 
 
-export default function Calculator() {
+export default function Calculator({ 
+  defaultMaterial = "stainless-steel",
+  defaultPrice = 260,
+  title = "Advanced Tube Weight Calculator",
+  description = "Calculate weight for multiple materials with precision and export capabilities"
+}) {
   // Use hooks for state management
-  const settings = useSettings();
+  const settings = useSettings(defaultMaterial, defaultPrice);
   const tubesHook = useTubes(settings.material);
   const calculations = useCalculations(tubesHook.tubes, settings.pricePerKg, settings.material);
   const exports = useExports(tubesHook.tubes, settings.pricePerKg, calculations.calculationName);
@@ -39,10 +44,10 @@ export default function Calculator() {
               </div>
               <div>
                 <CardTitle className="text-3xl font-bold ">
-                  Advanced Tube Weight Calculator
+                  {title}
                 </CardTitle>
                 <CardDescription className="text-base">
-                  Calculate weight for multiple materials with precision and export capabilities
+                  {description}
                 </CardDescription>
               </div>
             </div>
