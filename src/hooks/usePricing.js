@@ -231,7 +231,7 @@ export function usePricing() {
     if (!supabase) {
       return { success: false, error: "Supabase not configured. Please add your credentials to .env.local and restart the server." };
     }
-    if (totalCost <= 0) {
+    if (totalCost <= 0 && ssTotalCost <= 0 && msTotalCost <= 0) {
       return { success: false, error: "Total cost must be greater than 0" };
     }
 
@@ -270,7 +270,10 @@ export function usePricing() {
     sheetCost, pipeCost, topType, topCost, graniteColor,
     seatType, seatCost, finishType, finishCost, coatingColor,
     labourCost, weldingCost, electricityCost, machineCost,
-    totalCost, wholesalePercent, retailPercent, showroomPercent,
+    totalCost, ssTotalCost, msTotalCost,
+    ssPricePerKg, msPricePerKg, ssPipeCost, msPipeCost,
+    totalPipeWeight,
+    wholesalePercent, retailPercent, showroomPercent,
     wholesalePrice, retailPrice, showroomPrice,
   ]);
 
