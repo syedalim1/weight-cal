@@ -120,3 +120,82 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Premium Industrial Dark Theme Custom Styles */
+.glass-panel {
+  background: rgba(18, 18, 20, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+}
+
+.glass-panel-hover:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 255, 255, 0.03);
+  transform: translateY(-2px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glow-ss:hover {
+  border-color: rgba(56, 189, 248, 0.4) !important;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.1);
+}
+
+.glow-ms:hover {
+  border-color: rgba(249, 115, 22, 0.4) !important;
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.1);
+}
+
+.glow-pricing:hover {
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+}
+
+.glow-products:hover {
+  border-color: rgba(168, 85, 247, 0.4) !important;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.1);
+}
+
+/* Spreadsheet-like Table Input styles */
+.spreadsheet-input {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0.25rem 0.5rem;
+  width: 100%;
+  height: 100%;
+  color: inherit;
+  font-family: inherit;
+  transition: background 0.15s ease;
+}
+
+.spreadsheet-input:focus {
+  background: rgba(255, 255, 255, 0.05);
+  outline: 1px solid var(--color-ring);
+  box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.05);
+}
+
+.spreadsheet-row:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Premium Industrial Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(18, 18, 20, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+

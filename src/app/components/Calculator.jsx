@@ -1,4 +1,5 @@
-"use client"
+"use client";
+import React from "react";
 import {
   Card,
   CardContent,
@@ -8,18 +9,17 @@ import {
 } from "@/components/ui/card.jsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.jsx";
 import { Calculator as CalculatorIcon } from "lucide-react";
+
 import { useTubes } from "@/hooks/useTubes.js";
 import { useCalculations } from "@/hooks/useCalculations.js";
 import { useExports } from "@/hooks/useExports.js";
 import { useSettings } from "@/hooks/useSettings.js";
-import TubeForm from "./TubeForm.jsx";
-import TubeList from "./TubeList.jsx";
+
+import PipeTable, { calculateRowWeight } from "./PipeTable.jsx";
+import PipeOptimization from "./PipeOptimization.jsx";
 import CalculationSummary from "./CalculationSummary.jsx";
 import CalculatorToolbar from "./CalculatorToolbar.jsx";
 import SettingsTab from "./SettingsTab.jsx";
-
-
-
 
 export default function Calculator({ 
   defaultMaterial = "stainless-steel",
@@ -27,26 +27,38 @@ export default function Calculator({
   title = "Advanced Tube Weight Calculator",
   description = "Calculate weight for multiple materials with precision and export capabilities"
 }) {
-  // Use hooks for state management
   const settings = useSettings(defaultMaterial, defaultPrice);
   const tubesHook = useTubes(settings.material);
   const calculations = useCalculations(tubesHook.tubes, settings.pricePerKg, settings.material);
   const exports = useExports(tubesHook.tubes, settings.pricePerKg, calculations.calculationName);
 
+  // Intercept changes to auto-compute weightPerTube for background calculations & CSV/PDF exports
+  const handlePipesChange = (newPipes) => {
+    const updated = newPipes.map((row) => {
+      const materialCode = settings.material === "mild-steel" ? "ms" : "ss";
+      const wt = calculateRowWeight(row, materialCode);
+      return {
+        ...row,
+        weightPerTube: parseFloat(wt.toFixed(3)),
+      };
+    });
+    tubesHook.setTubes(updated);
+  };
+
   return (
-    <div className=" flex items-center justify-center p-4 bg-gradient-to-br from-background via-secondary/20 to-background">
-      <Card className="w-full max-w-4xl shadow-[var(--shadow-elevated)]">
-        <CardHeader className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-gradient-to-br from-primary to-accent rounded-lg">
-                <CalculatorIcon className="h-6 w-6 text-primary-foreground" />
+    <div className="flex items-center justify-center p-4 bg-[#09090b]">
+      <Card className="w-full max-w-5xl border-white/10 bg-zinc-950/60 glass-panel shadow-2xl">
+        <CardHeader className="pb-4 border-b border-white/5">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-zinc-900 border border-white/10 rounded-lg">
+                <CalculatorIcon className="h-6 w-6 text-zinc-300" />
               </div>
               <div>
-                <CardTitle className="text-3xl font-bold ">
+                <CardTitle className="text-xl font-bold tracking-tight text-white font-mono">
                   {title}
                 </CardTitle>
-                <CardDescription className="text-base">
+                <CardDescription className="text-xs text-zinc-400 font-mono">
                   {description}
                 </CardDescription>
               </div>
@@ -72,57 +84,33 @@ export default function Calculator({
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-6">
+        <CardContent className="pt-6 space-y-6">
           <Tabs defaultValue="calculator" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="calculator">Calculator</TabsTrigger>
-              <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-zinc-900 border border-white/5 p-1 rounded-lg">
+              <TabsTrigger value="calculator" className="font-mono text-xs uppercase py-1.5 rounded-md data-[state=active]:bg-zinc-800 data-[state=active]:text-white">Calculator</TabsTrigger>
+              <TabsTrigger value="settings" className="font-mono text-xs uppercase py-1.5 rounded-md data-[state=active]:bg-zinc-800 data-[state=active]:text-white">Settings</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="calculator" className="space-y-6">
-              <TubeForm
-                shape={tubesHook.shape}
-                setShape={tubesHook.setShape}
-                standardSize={tubesHook.standardSize}
-                setStandardSize={tubesHook.setStandardSize}
-                customSize={tubesHook.customSize}
-                setCustomSize={tubesHook.setCustomSize}
-                standardWidth={tubesHook.standardWidth}
-                setStandardWidth={tubesHook.setStandardWidth}
-                customWidth={tubesHook.customWidth}
-                setCustomWidth={tubesHook.setCustomWidth}
-                standardHeight={tubesHook.standardHeight}
-                setStandardHeight={tubesHook.setStandardHeight}
-                customHeight={tubesHook.customHeight}
-                setCustomHeight={tubesHook.setCustomHeight}
-                thickness={tubesHook.thickness}
-                setThickness={tubesHook.setThickness}
-                length={tubesHook.length}
-                setLength={tubesHook.setLength}
-                quantity={tubesHook.quantity}
-                setQuantity={tubesHook.setQuantity}
-                pricePerKg={settings.pricePerKg}
-                setPricePerKg={settings.setPricePerKg}
-                editingTube={tubesHook.editingTube}
-                onAddTube={tubesHook.addTube}
-                onUpdateTube={tubesHook.updateTube}
-                onShapeChange={tubesHook.handleShapeChange}
-              />
+            <TabsContent value="calculator" className="space-y-6 pt-4">
+              {/* Spreadsheet Table */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-mono uppercase tracking-wider text-zinc-400">Pipes Specification</h3>
+                <PipeTable
+                  pipes={tubesHook.tubes}
+                  onChange={handlePipesChange}
+                  pricePerKg={settings.pricePerKg}
+                  material={settings.material === "mild-steel" ? "ms" : "ss"}
+                />
+              </div>
 
-              <TubeList
-                tubes={tubesHook.tubes}
-                searchTerm={tubesHook.searchTerm}
-                setSearchTerm={tubesHook.setSearchTerm}
-                pricePerKg={settings.pricePerKg}
-                onRemoveTube={tubesHook.removeTube}
-                onDuplicateTube={tubesHook.duplicateTube}
-                onEditTube={tubesHook.editTube}
-              />
+              {/* Cutting Optimizer */}
+              <PipeOptimization pipes={tubesHook.tubes} />
 
-              <CalculationSummary tubes={tubesHook.tubes} pricePerKg={settings.pricePerKg} />
+              {/* Calculations Summary */}
+              <CalculationSummary tubes={tubesHook.tubes} pricePerKg={settings.pricePerKg} material={settings.material === "mild-steel" || settings.material === "carbon-steel" ? "ms" : "ss"} />
             </TabsContent>
 
-            <TabsContent value="settings" className="space-y-6">
+            <TabsContent value="settings" className="space-y-6 pt-4">
               <SettingsTab
                 pricePerKg={settings.pricePerKg}
                 setPricePerKg={settings.setPricePerKg}

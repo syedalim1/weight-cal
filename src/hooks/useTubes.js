@@ -419,6 +419,7 @@ export const useTubes = (material) => {
   return {
     // State
     tubes,
+    setTubes,
     shape,
     standardSize,
     customSize,

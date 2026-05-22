@@ -12,6 +12,10 @@ export function usePricing() {
   const [materialType, setMaterialType] = useState("ss");
   const [modelNumber, setModelNumber] = useState("");
 
+  // Pipes and Image Details (Saved in LocalStorage)
+  const [pipes, setPipes] = useState([]);
+  const [image, setImage] = useState(null);
+
   // Size Configuration
   const [width, setWidth] = useState("");
   const [length, setLength] = useState("");
@@ -114,9 +118,70 @@ export function usePricing() {
     setMsRetailPercent(toStr(data.ms_retail_percent) || "20");
     setMsShowroomPercent(toStr(data.ms_showroom_percent) || "28");
 
+    // Load LocalStorage items
+    try {
+      const storedPipes = localStorage.getItem(`product_pipes_${data.id}`);
+      if (storedPipes) {
+        setPipes(JSON.parse(storedPipes));
+      } else {
+        setPipes([]);
+      }
+    } catch (e) {
+      console.error("Failed to load pipes from localStorage", e);
+      setPipes([]);
+    }
+
+    try {
+      const storedImage = localStorage.getItem(`product_image_${data.id}`);
+      setImage(storedImage || null);
+    } catch (e) {
+      console.error("Failed to load image from localStorage", e);
+      setImage(null);
+    }
+
     setLoadingProduct(false);
     return { success: true };
   }, []);
+
+  // Auto-calculate Total Pipe Weight from pipes array
+  useEffect(() => {
+    if (pipes && pipes.length > 0) {
+      const density = materialType === "ms" ? 7.85 : 7.95;
+      const wt = pipes.reduce((sum, row) => {
+        const wtVal = parseFloat(row.thickness) || 0;
+        const lenVal = parseFloat(row.length) || 0;
+        if (!wtVal || !lenVal) return sum;
+        
+        let rowWeight = 0;
+        if (row.shape === "sheet") {
+          const w = parseFloat(row.width) || 0;
+          rowWeight = (w * 0.0265) * (lenVal * 0.0265) * (wtVal / 1000) * density * 1000;
+        } else if (row.shape === "round") {
+          const od = (parseFloat(row.size) || 0) * 25.4;
+          const id = od - 2 * wtVal;
+          const crossSectionArea = (Math.PI * (Math.pow(od / 2, 2) - Math.pow(id / 2, 2))) / 1000000;
+          rowWeight = crossSectionArea * density * 1000 * (lenVal * 0.0254);
+        } else if (row.shape === "square") {
+          const side = (parseFloat(row.size) || 0) * 25.4;
+          const innerSide = side - 2 * wtVal;
+          const crossSectionArea = (Math.pow(side, 2) - Math.pow(innerSide, 2)) / 1000000;
+          rowWeight = crossSectionArea * density * 1000 * (lenVal * 0.0254);
+        } else if (row.shape === "rectangular") {
+          const w = (parseFloat(row.width) || 0) * 25.4;
+          const h = (parseFloat(row.height) || 0) * 25.4;
+          const innerWidth = w - 2 * wtVal;
+          const innerHeight = h - 2 * wtVal;
+          const crossSectionArea = (w * h - innerWidth * innerHeight) / 1000000;
+          rowWeight = crossSectionArea * density * 1000 * (lenVal * 0.0254);
+        }
+        
+        const qty = parseFloat(row.quantity) || 0;
+        return sum + (rowWeight * qty);
+      }, 0);
+      
+      setTotalPipeWeight(wt > 0 ? wt.toFixed(2) : "");
+    }
+  }, [pipes, materialType]);
 
   // Auto-calculate Pipe Cost based on active material type
   const ssPipeCost = useMemo(() => {
@@ -139,6 +204,8 @@ export function usePricing() {
       } else if (materialType === "ms" && num(msPricePerKg) > 0) {
         setPipeCost(msPipeCost.toFixed(2));
       }
+    } else {
+      setPipeCost("");
     }
   }, [totalPipeWeight, ssPricePerKg, msPricePerKg, materialType, ssPipeCost, msPipeCost]);
 
@@ -270,6 +337,22 @@ export function usePricing() {
       if (result.error) {
         return { success: false, error: result.error.message };
       }
+
+      // Save LocalStorage items
+      const savedId = result.data?.[0]?.id || editId;
+      if (savedId) {
+        try {
+          localStorage.setItem(`product_pipes_${savedId}`, JSON.stringify(pipes));
+          if (image) {
+            localStorage.setItem(`product_image_${savedId}`, image);
+          } else {
+            localStorage.removeItem(`product_image_${savedId}`);
+          }
+        } catch (e) {
+          console.error("Failed to save pipes/image to localStorage", e);
+        }
+      }
+
       return { success: true, data: result.data, isUpdate: !!editId };
     } catch (err) {
       return { success: false, error: err.message };
@@ -288,13 +371,51 @@ export function usePricing() {
     ssWholesalePercent, ssRetailPercent, ssShowroomPercent,
     msWholesalePercent, msRetailPercent, msShowroomPercent,
     wholesalePrice, retailPrice, showroomPrice,
+    pipes, image,
   ]);
+
+  // Reset Form
+  const resetForm = useCallback(() => {
+    setEditId(null);
+    setProductType("chair");
+    setMaterialType("ss");
+    setModelNumber("");
+    setWidth("");
+    setLength("");
+    setSheetCost("");
+    setPipeCost("");
+    setTotalPipeWeight("");
+    setSsPricePerKg("260");
+    setMsPricePerKg("120");
+    setTopType("steel");
+    setTopCost("");
+    setGraniteColor("black");
+    setSeatType("cushion");
+    setSeatCost("");
+    setFinishType("polish");
+    setFinishCost("");
+    setCoatingColor("black");
+    setLabourCost("");
+    setWeldingCost("");
+    setElectricityCost("");
+    setMachineCost("");
+    setSsWholesalePercent("15");
+    setSsRetailPercent("25");
+    setSsShowroomPercent("45");
+    setMsWholesalePercent("12");
+    setMsRetailPercent("20");
+    setMsShowroomPercent("28");
+    setCustomPrice("");
+    setPipes([]);
+    setImage(null);
+  }, []);
 
   return {
     // Edit mode
     editId,
     loadProduct,
     loadingProduct,
+    resetForm,
     // Product Details
     productType, setProductType,
     materialType, setMaterialType,
@@ -335,6 +456,9 @@ export function usePricing() {
     msShowroomPercent, setMsShowroomPercent,
     // Custom Price
     customPrice, setCustomPrice,
+    // Pipes & Image
+    pipes, setPipes,
+    image, setImage,
     // Derived
     totalCost,
     ssTotalCost,
