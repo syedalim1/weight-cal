@@ -1,8 +1,17 @@
 import Link from "next/link";
-import { Calculator, Wrench, IndianRupee, Package } from "lucide-react";
+import { Calculator, Wrench, IndianRupee, Package, Sparkles } from "lucide-react";
 
 export default function Home() {
   const cards = [
+    {
+      href: "/ai-analyzer",
+      title: "AI Furniture Analyzer",
+      description: "Upload a photo and let AI generate the complete pipe cut list with weight & cost.",
+      icon: Sparkles,
+      colorClass: "text-violet-400 group-hover:text-violet-300",
+      iconBg: "bg-violet-500/10 border-violet-500/20",
+      glowClass: "glow-ai",
+    },
     {
       href: "/ss-calculator",
       title: "SS Weight Calculator",

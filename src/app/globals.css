@@ -157,6 +157,32 @@
   box-shadow: 0 0 20px rgba(168, 85, 247, 0.1);
 }
 
+.glow-ai:hover {
+  border-color: rgba(139, 92, 246, 0.5) !important;
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.15), 0 0 50px rgba(139, 92, 246, 0.05);
+}
+
+/* AI analysis pulse animation */
+@keyframes ai-pulse {
+  0%, 100% { border-color: rgba(139, 92, 246, 0.2); box-shadow: 0 0 15px rgba(139, 92, 246, 0.05); }
+  50% { border-color: rgba(139, 92, 246, 0.5); box-shadow: 0 0 25px rgba(139, 92, 246, 0.15); }
+}
+
+.ai-analyzing {
+  animation: ai-pulse 2s ease-in-out infinite;
+}
+
+/* Step indicator styles */
+.step-active {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(168, 85, 247, 0.08));
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.step-completed {
+  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
 /* Spreadsheet-like Table Input styles */
 .spreadsheet-input {
   background: transparent;
