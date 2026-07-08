@@ -8,3 +8,6 @@ export const { GET, POST, PUT } = serve({
     analyzeFurnitureImage,
   ],
 });
+
+// Allow long-running AI analysis on Vercel (up to 5 minutes)
+export const maxDuration = 300;

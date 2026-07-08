@@ -1,31 +1,41 @@
 import { inngest } from "./client";
 import { GoogleGenAI } from "@google/genai";
-import { supabase } from "../lib/supabase";
+import { supabaseServer } from "../lib/supabaseServer";
+
+// Use models.generateContent — the stable, well-documented API for single-turn requests
+const GEMINI_MODEL = "gemini-2.5-flash";
 
 export const analyzeFurnitureImage = inngest.createFunction(
-  { id: "analyze-furniture-image" },
-  { event: "app/analyze.furniture" },
+  {
+    id: "analyze-furniture-image",
+    retries: 2, // AI calls shouldn't retry excessively
+    triggers: [{ event: "app/analyze.furniture" }],
+  },
   async ({ event, step }) => {
     const { jobId, image, dimensions } = event.data;
 
     // Helper to update status in DB
     const updateJobStatus = async (status, progress, result = null, error = null) => {
-      if (!supabase) return; // Skip if Supabase is not configured
-      
+      if (!supabaseServer) {
+        console.warn("[inngest] Supabase server client not configured — skipping DB update");
+        return;
+      }
+
       const updateData = { status, progress, updated_at: new Date().toISOString() };
       if (result) updateData.result = result;
       if (error) updateData.error = error;
 
-      const { error: dbError } = await supabase
+      const { error: dbError } = await supabaseServer
         .from('ai_jobs')
         .update(updateData)
         .eq('id', jobId);
         
-      if (dbError) console.error("Error updating job status:", dbError);
+      if (dbError) console.error("[inngest] Error updating job status:", dbError);
     };
 
     try {
       await step.run("set-preparing-status", async () => {
+        console.log(`[inngest] Job ${jobId}: Starting analysis`);
         await updateJobStatus("processing", "Preparing AI request...");
       });
 
@@ -46,6 +56,7 @@ export const analyzeFurnitureImage = inngest.createFunction(
         if (!apiKey) {
           throw new Error("Google Gemini API key not configured.");
         }
+        console.log(`[inngest] Job ${jobId}: Calling Gemini (${GEMINI_MODEL})`);
         return await callGemini(image, systemPrompt, userPrompt, apiKey);
       });
 
@@ -57,6 +68,7 @@ export const analyzeFurnitureImage = inngest.createFunction(
         if (!result.content) {
           throw new Error("No response from AI model.");
         }
+        console.log(`[inngest] Job ${jobId}: Parsing response (${result.content.length} chars)`);
         return {
           ...parseAIResponse(result.content),
           rawResponse: result.content,
@@ -65,11 +77,13 @@ export const analyzeFurnitureImage = inngest.createFunction(
       });
 
       await step.run("set-completed-status", async () => {
+        console.log(`[inngest] Job ${jobId}: Completed successfully`);
         await updateJobStatus("completed", "Analysis completed.", parsed);
       });
 
       return { success: true, jobId, parsed };
     } catch (error) {
+      console.error(`[inngest] Job ${jobId}: Failed —`, error.message);
       await step.run("set-failed-status", async () => {
         await updateJobStatus("failed", "Failed during processing.", null, error.message || "Internal error");
       });
@@ -78,7 +92,7 @@ export const analyzeFurnitureImage = inngest.createFunction(
   }
 );
 
-// --- Helpers copied from route.js ---
+// --- Helpers ---
 
 async function callGemini(image, systemPrompt, userPrompt, apiKey) {
   const ai = new GoogleGenAI({ apiKey });
@@ -96,21 +110,27 @@ async function callGemini(image, systemPrompt, userPrompt, apiKey) {
     }
   }
 
-  const interaction = await ai.interactions.create({
-    model: "gemini-3.5-flash",
-    input: [
-      { type: "text", text: `${systemPrompt}\n\n${userPrompt}` },
+  const response = await ai.models.generateContent({
+    model: GEMINI_MODEL,
+    contents: [
       {
-        type: "image",
-        data: base64Data,
-        mime_type: mimeType
-      }
-    ]
+        role: "user",
+        parts: [
+          { text: `${systemPrompt}\n\n${userPrompt}` },
+          {
+            inlineData: {
+              data: base64Data,
+              mimeType: mimeType,
+            },
+          },
+        ],
+      },
+    ],
   });
-  
+
   return {
-    content: interaction.output_text,
-    usage: interaction.usage || null
+    content: response.text,
+    usage: response.usageMetadata || null,
   };
 }
 
@@ -238,7 +258,7 @@ function parseAIResponse(content) {
           Date.now().toString() +
           Math.random().toString(36).substr(2, 5) +
           index,
-        name: item.name || \`Part \${index + 1}\`,
+        name: item.name || `Part ${index + 1}`,
         shape: ["square", "round", "rectangular"].includes(item.shape)
           ? item.shape
           : "square",
@@ -258,8 +278,8 @@ function parseAIResponse(content) {
       cutList: parsed.cutList || [],
     };
   } catch (error) {
-    console.error("Failed to parse AI response:", error);
-    console.error("Raw content:", content);
+    console.error("[inngest] Failed to parse AI response:", error);
+    console.error("[inngest] Raw content:", content);
     return {
       furnitureType: "unknown",
       analysis: content,
