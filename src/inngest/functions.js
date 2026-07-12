@@ -149,6 +149,7 @@ RULES:
 OUTPUT FORMAT (respond with ONLY this JSON, no markdown code fences, no extra text):
 {
   "furnitureType": "chair|table|stool|rack|shelf|bed|bench|other",
+  "materialType": "ss|ms",
   "analysis": "A 2-3 sentence description of the furniture structure you see in the image.",
   "structuralMembers": [
     { "name": "Front Legs", "count": 2, "description": "Vertical front support legs" },
@@ -169,6 +170,7 @@ OUTPUT FORMAT (respond with ONLY this JSON, no markdown code fences, no extra te
 }
 
 IMPORTANT FIELD RULES:
+- "materialType": determine if it is stainless steel (ss) if it looks like shiny, polished silver metal, or mild steel (ms) if it is painted, powder-coated, or matte.
 - "shape": must be one of "square", "round", "rectangular"
 - "size": pipe size in inches (used for square and round). Example: "1.0", "0.75", "1.5"
 - "width" and "height": only used when shape is "rectangular", in inches. Leave as "" otherwise.
@@ -273,6 +275,7 @@ function parseAIResponse(content) {
 
     return {
       furnitureType: parsed.furnitureType || "unknown",
+      materialType: parsed.materialType || "ms",
       analysis: parsed.analysis || "Analysis completed.",
       structuralMembers: parsed.structuralMembers || [],
       cutList: parsed.cutList || [],
@@ -282,6 +285,7 @@ function parseAIResponse(content) {
     console.error("[inngest] Raw content:", content);
     return {
       furnitureType: "unknown",
+      materialType: "ms",
       analysis: content,
       structuralMembers: [],
       cutList: [],

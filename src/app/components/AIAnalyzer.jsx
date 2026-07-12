@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.jsx";
+import { Badge } from "@/components/ui/badge.jsx";
 import {
   Sparkles,
   Upload,
@@ -106,7 +107,37 @@ export default function AIAnalyzer() {
   }, [ai]);
 
   // Price per kg based on material
-  const pricePerKg = ai.dimensions.materialType === "ms" ? Number(ai.msSteelRate) || 120 : 260;
+  const pricePerKg = ai.dimensions.materialType === "ms" ? Number(ai.msSteelRate) || 120 : Number(ai.ssSteelRate) || 260;
+
+  const num = (val) => parseFloat(val) || 0;
+  
+  const calculateTotalWeight = () => {
+    const material = ai.dimensions.materialType === "ms" ? "ms" : "ss";
+    return ai.cutList.reduce((acc, row) => {
+      const w = calculateRowWeight(row, material);
+      const qty = parseFloat(row.quantity) || 0;
+      return acc + (w * qty);
+    }, 0);
+  };
+  
+  const totalWeight = calculateTotalWeight();
+  const materialType = ai.dimensions.materialType;
+  
+  const baseSteelCost = totalWeight * pricePerKg;
+  const steelWastageCost = baseSteelCost * (num(ai.steelWastage) / 100);
+  const totalSteelCost = baseSteelCost + steelWastageCost;
+  
+  const totalLabourCost = num(ai.fabricationLabour) + num(ai.weldingLabour) + num(ai.grindingLabour) + num(ai.assemblyLabour);
+  
+  const totalFinishingCost = materialType === "ms" 
+    ? num(ai.powderCoatingCost)
+    : num(ai.polishingCost) + num(ai.buffingCost) + num(ai.mirrorFinishCost);
+    
+  const totalCompanyOverhead = num(ai.factoryOverhead) + num(ai.electricity) + num(ai.consumables) + num(ai.adminCost) + num(ai.packingCost);
+  
+  const totalManufacturingCost = totalSteelCost + totalLabourCost + totalFinishingCost + totalCompanyOverhead;
+  const profitAmount = totalManufacturingCost * (num(ai.profitMargin) / 100);
+  const recommendedSellingPrice = totalManufacturingCost + profitAmount;
 
   return (
     <div className="flex items-center justify-center p-4 bg-[#09090b] min-h-screen">
@@ -272,7 +303,7 @@ export default function AIAnalyzer() {
               )}
 
               {/* MS Steel Rate & Manual Mode Toggle */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b border-white/10">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-4 border-b border-white/10">
                 <div className="space-y-1.5">
                   <label className="text-zinc-400 text-[10px] font-mono uppercase tracking-wider">
                     MS Steel Rate (₹/kg)
@@ -281,6 +312,17 @@ export default function AIAnalyzer() {
                     type="number"
                     value={ai.msSteelRate}
                     onChange={(e) => ai.setMsSteelRate(e.target.value)}
+                    className="w-full h-9 px-3 bg-zinc-900/60 border border-white/10 rounded-md text-zinc-200 text-sm font-mono focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-zinc-400 text-[10px] font-mono uppercase tracking-wider">
+                    SS Steel Rate (₹/kg)
+                  </label>
+                  <input
+                    type="number"
+                    value={ai.ssSteelRate}
+                    onChange={(e) => ai.setSsSteelRate(e.target.value)}
                     className="w-full h-9 px-3 bg-zinc-900/60 border border-white/10 rounded-md text-zinc-200 text-sm font-mono focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20"
                   />
                 </div>
@@ -594,40 +636,124 @@ export default function AIAnalyzer() {
             </div>
           )}
 
-          {/* ===== STEP 5: Weight & Price Results ===== */}
+          {/* ===== STEP 5: Complete Cost Estimation & Manufacturing Report ===== */}
           {ai.currentStep === 5 && (
-            <div className="space-y-6">
-              <h3 className="text-xs font-mono uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-                <IndianRupee className="h-4 w-4" /> Step 5 — Weight & Cost Summary
-              </h3>
+            <div className="space-y-8">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-mono uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+                  <IndianRupee className="h-4 w-4" /> Step 5 — Complete Manufacturing Cost Estimation
+                </h3>
+                <Badge variant="outline" className="border-violet-500/30 text-violet-400 bg-violet-500/10 font-mono">
+                  {materialType === "ms" ? "MS Flow Active" : "SS Flow Active"}
+                </Badge>
+              </div>
 
-              {/* Summary Cards */}
+              {/* Top Summary Cards */}
               <CalculationSummary
                 tubes={ai.cutList}
                 pricePerKg={pricePerKg}
-                material={ai.dimensions.materialType === "ms" ? "ms" : "ss"}
+                material={materialType}
               />
 
-              {/* Category-wise breakdown */}
-              <CategoryBreakdown
-                cutList={ai.cutList}
-                material={ai.dimensions.materialType === "ms" ? "ms" : "ss"}
-                pricePerKg={pricePerKg}
-              />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left Side: Editable Parameters */}
+                <div className="space-y-6">
+                  <h4 className="text-sm font-mono font-semibold text-zinc-200 border-b border-white/10 pb-2">
+                    Cost Parameters (Editable)
+                  </h4>
+                  
+                  {/* Labour */}
+                  <div className="space-y-3">
+                    <p className="text-xs font-mono text-zinc-500 uppercase">Labour Charges</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <DimensionInput label="Fabrication" value={ai.fabricationLabour} onChange={ai.setFabricationLabour} placeholder="0" />
+                      <DimensionInput label="Welding" value={ai.weldingLabour} onChange={ai.setWeldingLabour} placeholder="0" />
+                      <DimensionInput label="Grinding" value={ai.grindingLabour} onChange={ai.setGrindingLabour} placeholder="0" />
+                      <DimensionInput label="Assembly" value={ai.assemblyLabour} onChange={ai.setAssemblyLabour} placeholder="0" />
+                    </div>
+                  </div>
 
-              {/* Cut list table (read view) */}
-              <div className="space-y-2">
-                <p className="text-zinc-400 text-xs font-mono uppercase tracking-wider">Detailed Cut List</p>
-                <PipeTable
-                  pipes={ai.cutList}
-                  onChange={handlePipesChange}
-                  pricePerKg={pricePerKg}
-                  material={ai.dimensions.materialType === "ms" ? "ms" : "ss"}
-                />
+                  {/* Finishing */}
+                  <div className="space-y-3">
+                    <p className="text-xs font-mono text-zinc-500 uppercase">Finishing Cost</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {materialType === "ms" ? (
+                        <DimensionInput label="Powder Coating" value={ai.powderCoatingCost} onChange={ai.setPowderCoatingCost} placeholder="0" />
+                      ) : (
+                        <>
+                          <DimensionInput label="Polishing" value={ai.polishingCost} onChange={ai.setPolishingCost} placeholder="0" />
+                          <DimensionInput label="Buffing" value={ai.buffingCost} onChange={ai.setBuffingCost} placeholder="0" />
+                          <DimensionInput label="Mirror Finish" value={ai.mirrorFinishCost} onChange={ai.setMirrorFinishCost} placeholder="0" />
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Company Charges */}
+                  <div className="space-y-3">
+                    <p className="text-xs font-mono text-zinc-500 uppercase">Company Overheads</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <DimensionInput label="Factory Overhead" value={ai.factoryOverhead} onChange={ai.setFactoryOverhead} placeholder="0" />
+                      <DimensionInput label="Electricity" value={ai.electricity} onChange={ai.setElectricity} placeholder="0" />
+                      <DimensionInput label="Consumables" value={ai.consumables} onChange={ai.setConsumables} placeholder="0" />
+                      <DimensionInput label="Administrative" value={ai.adminCost} onChange={ai.setAdminCost} placeholder="0" />
+                      <DimensionInput label="Packing" value={ai.packingCost} onChange={ai.setPackingCost} placeholder="0" />
+                    </div>
+                  </div>
+
+                  {/* Percentages */}
+                  <div className="space-y-3">
+                    <p className="text-xs font-mono text-zinc-500 uppercase">Margins & Wastage</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <DimensionInput label="Steel Wastage (%)" value={ai.steelWastage} onChange={ai.setSteelWastage} placeholder="5" />
+                      <DimensionInput label="Profit Margin (%)" value={ai.profitMargin} onChange={ai.setProfitMargin} placeholder="20" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Side: Final Report */}
+                <div className="space-y-6">
+                  <h4 className="text-sm font-mono font-semibold text-zinc-200 border-b border-white/10 pb-2">
+                    Manufacturing Report
+                  </h4>
+                  <div className="bg-zinc-900/60 rounded-xl border border-white/10 p-5 space-y-4 shadow-xl">
+                    
+                    <ReportRow label="Furniture Type" value={ai.analysisResult?.furnitureType || "Custom"} capitalize />
+                    <ReportRow label="Material Build" value={materialType === "ms" ? "Mild Steel (MS)" : "Stainless Steel (SS)"} />
+                    <ReportRow label="Total Steel Weight" value={`${totalWeight.toFixed(2)} kg`} />
+                    
+                    <div className="h-px bg-white/10 my-2" />
+
+                    <ReportRow label="Base Material Cost" value={`₹${baseSteelCost.toFixed(2)}`} />
+                    <ReportRow label={`Wastage (${num(ai.steelWastage)}%)`} value={`₹${steelWastageCost.toFixed(2)}`} />
+                    <ReportRow label="Total Steel Cost" value={`₹${totalSteelCost.toFixed(2)}`} highlight />
+
+                    <div className="h-px bg-white/10 my-2" />
+
+                    <ReportRow label="Total Labour Cost" value={`₹${totalLabourCost.toFixed(2)}`} />
+                    <ReportRow label="Total Finishing Cost" value={`₹${totalFinishingCost.toFixed(2)}`} />
+                    <ReportRow label="Company Overheads" value={`₹${totalCompanyOverhead.toFixed(2)}`} />
+
+                    <div className="h-px bg-white/10 my-2" />
+
+                    <ReportRow label="Total Mfg Cost" value={`₹${totalManufacturingCost.toFixed(2)}`} highlight />
+                    <ReportRow label={`Profit Amount (${num(ai.profitMargin)}%)`} value={`₹${profitAmount.toFixed(2)}`} className="text-emerald-400" />
+                    
+                    <div className="h-px bg-white/10 my-2" />
+                    
+                    <div className="flex justify-between items-center py-2">
+                      <span className="font-mono text-zinc-300 font-bold text-sm">Recommended Selling Price</span>
+                      <span className="font-mono text-xl font-bold text-white bg-violet-500/20 px-3 py-1 rounded border border-violet-500/30 shadow-lg shadow-violet-500/10">
+                        ₹{recommendedSellingPrice.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                      </span>
+                    </div>
+
+                  </div>
+                </div>
               </div>
 
               {/* Action buttons */}
-              <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center justify-between pt-6 border-t border-white/10">
                 <Button
                   onClick={() => ai.setCurrentStep(4)}
                   variant="outline"
@@ -642,7 +768,7 @@ export default function AIAnalyzer() {
                   }}
                   className="bg-violet-600 hover:bg-violet-500 text-white font-mono text-xs uppercase tracking-wider h-9 px-5"
                 >
-                  <Sparkles className="h-3.5 w-3.5 mr-1.5" /> New Analysis
+                  <Sparkles className="h-3.5 w-3.5 mr-1.5" /> Start New
                 </Button>
               </div>
             </div>
@@ -654,6 +780,17 @@ export default function AIAnalyzer() {
 }
 
 // ===== Sub-components =====
+
+function ReportRow({ label, value, highlight, capitalize, className = "" }) {
+  return (
+    <div className={`flex justify-between items-center ${className}`}>
+      <span className={`font-mono text-xs ${highlight ? "text-zinc-300 font-semibold" : "text-zinc-500"}`}>{label}</span>
+      <span className={`font-mono text-sm ${capitalize ? "capitalize" : ""} ${highlight ? "text-white font-bold" : "text-zinc-300"}`}>
+        {value}
+      </span>
+    </div>
+  );
+}
 
 function DimensionInput({ label, value, onChange, placeholder }) {
   return (

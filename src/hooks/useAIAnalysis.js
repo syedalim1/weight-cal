@@ -29,6 +29,32 @@ export function useAIAnalysis() {
   const [currentStep, setCurrentStep] = useState(1);
   const pollIntervalRef = useRef(null);
 
+  // Cost Estimation State
+  const [ssSteelRate, setSsSteelRate] = useState(260);
+  
+  // Labour
+  const [fabricationLabour, setFabricationLabour] = useState("");
+  const [weldingLabour, setWeldingLabour] = useState("");
+  const [grindingLabour, setGrindingLabour] = useState("");
+  const [assemblyLabour, setAssemblyLabour] = useState("");
+
+  // Finishing
+  const [powderCoatingCost, setPowderCoatingCost] = useState("");
+  const [polishingCost, setPolishingCost] = useState("");
+  const [buffingCost, setBuffingCost] = useState("");
+  const [mirrorFinishCost, setMirrorFinishCost] = useState("");
+
+  // Company Overheads
+  const [factoryOverhead, setFactoryOverhead] = useState("");
+  const [electricity, setElectricity] = useState("");
+  const [consumables, setConsumables] = useState("");
+  const [adminCost, setAdminCost] = useState("");
+  const [packingCost, setPackingCost] = useState("");
+
+  // Percentages
+  const [steelWastage, setSteelWastage] = useState("5");
+  const [profitMargin, setProfitMargin] = useState("20");
+
   const resizeImage = useCallback((file, maxDim = 1024) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -108,8 +134,13 @@ export function useAIAnalysis() {
         if (job.status === "completed") {
           clearInterval(pollIntervalRef.current);
           const data = job.result;
+          if (!isManualMode && data.materialType) {
+            setDimensions(prev => ({ ...prev, materialType: data.materialType }));
+          }
+
           setAnalysisResult({
             furnitureType: data.furnitureType,
+            materialType: data.materialType,
             analysis: data.analysis,
             structuralMembers: data.structuralMembers || [],
             rawResponse: data.rawResponse,
@@ -221,6 +252,24 @@ export function useAIAnalysis() {
     setIsManualMode,
     msSteelRate,
     setMsSteelRate,
+
+    // New Cost Estimations
+    ssSteelRate, setSsSteelRate,
+    fabricationLabour, setFabricationLabour,
+    weldingLabour, setWeldingLabour,
+    grindingLabour, setGrindingLabour,
+    assemblyLabour, setAssemblyLabour,
+    powderCoatingCost, setPowderCoatingCost,
+    polishingCost, setPolishingCost,
+    buffingCost, setBuffingCost,
+    mirrorFinishCost, setMirrorFinishCost,
+    factoryOverhead, setFactoryOverhead,
+    electricity, setElectricity,
+    consumables, setConsumables,
+    adminCost, setAdminCost,
+    packingCost, setPackingCost,
+    steelWastage, setSteelWastage,
+    profitMargin, setProfitMargin,
 
     handleImageUpload,
     removeImage,
