@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { inngest } from "../../../inngest/client";
-import { supabase } from "../../../lib/supabase";
+import prisma from "../../../lib/prisma";
 
 export async function POST(request) {
   try {
@@ -14,28 +14,15 @@ export async function POST(request) {
       );
     }
 
-    let jobId = null;
+    // Create a job record in the database
+    const job = await prisma.aiJob.create({
+      data: {
+        status: "pending",
+        progress: "Uploading image...",
+      },
+    });
 
-    if (supabase) {
-      // Create a job record in Supabase
-      const { data, error } = await supabase
-        .from("ai_jobs")
-        .insert([{ status: "pending", progress: "Uploading image..." }])
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Supabase insert error:", error);
-        return NextResponse.json(
-          { error: "Database error while creating job." },
-          { status: 500 }
-        );
-      }
-      jobId = data.id;
-    } else {
-      // Fallback if supabase isn't configured, although tracking won't work well
-      jobId = "temp-" + Date.now().toString();
-    }
+    const jobId = job.id;
 
     // Trigger the Inngest background workflow
     await inngest.send({

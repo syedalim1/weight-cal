@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "../../../../lib/supabase";
+import prisma from "../../../../lib/prisma";
 
 export async function GET(request, { params }) {
   try {
@@ -9,22 +9,15 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Job ID required" }, { status: 400 });
     }
 
-    if (!supabase) {
-      return NextResponse.json({ error: "Database not configured" }, { status: 500 });
-    }
+    const job = await prisma.aiJob.findUnique({
+      where: { id },
+    });
 
-    const { data, error } = await supabase
-      .from("ai_jobs")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (error) {
-      console.error("Error fetching job:", error);
+    if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ job: data });
+    return NextResponse.json({ job });
   } catch (error) {
     console.error("Job API error:", error);
     return NextResponse.json(

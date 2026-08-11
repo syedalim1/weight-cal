@@ -5,6 +5,15 @@ import { Calculator, Wrench, Sparkles } from "lucide-react";
 export default function Home() {
   const cards = [
     {
+      href: "/calculator",
+      title: "Unified Calculator",
+      description: "Step 1: Next-gen unified calculator with Manual & AI Auto-Generate modes.",
+      icon: Calculator,
+      colorClass: "text-emerald-400 group-hover:text-emerald-300",
+      iconBg: "bg-emerald-500/10 border-emerald-500/20",
+      glowClass: "glow-pricing", // reusing existing glow class if it exists or generic
+    },
+    {
       href: "/ai-analyzer",
       title: "AI Furniture Analyzer",
       description: "Upload a photo and let AI generate the complete pipe cut list with weight & cost.",

@@ -1,6 +1,6 @@
 import { inngest } from "./client";
 import { GoogleGenAI } from "@google/genai";
-import { supabaseServer } from "../lib/supabaseServer";
+import prisma from "../lib/prisma";
 
 // Use models.generateContent — the stable, well-documented API for single-turn requests
 const GEMINI_MODEL = "gemini-2.5-flash";
@@ -16,22 +16,20 @@ export const analyzeFurnitureImage = inngest.createFunction(
 
     // Helper to update status in DB
     const updateJobStatus = async (status, progress, result = null, error = null) => {
-      if (!supabaseServer) {
-        console.warn("[inngest] Supabase server client not configured — skipping DB update");
-        return;
-      }
-
-      const updateData = { status, progress, updated_at: new Date().toISOString() };
+      const updateData = { status, progress };
       if (result) updateData.result = result;
       if (error) updateData.error = error;
 
-      const { error: dbError } = await supabaseServer
-        .from('ai_jobs')
-        .update(updateData)
-        .eq('id', jobId);
-        
-      if (dbError) console.error("[inngest] Error updating job status:", dbError);
+      try {
+        await prisma.aiJob.update({
+          where: { id: jobId },
+          data: updateData,
+        });
+      } catch (dbError) {
+        console.error("[inngest] Error updating job status:", dbError);
+      }
     };
+
 
     try {
       await step.run("set-preparing-status", async () => {
