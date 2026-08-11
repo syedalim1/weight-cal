@@ -1,5 +1,6 @@
+
 import Link from "next/link";
-import { Calculator, Wrench, IndianRupee, Package, Sparkles } from "lucide-react";
+import { Calculator, Wrench, Sparkles } from "lucide-react";
 
 export default function Home() {
   const cards = [
@@ -30,24 +31,6 @@ export default function Home() {
       iconBg: "bg-orange-500/10 border-orange-500/20",
       glowClass: "glow-ms",
     },
-    {
-      href: "/pricing",
-      title: "Furniture Pricing",
-      description: "Run advanced furniture costing and compute tier margins instantly.",
-      icon: IndianRupee,
-      colorClass: "text-emerald-400 group-hover:text-emerald-300",
-      iconBg: "bg-emerald-500/10 border-emerald-500/20",
-      glowClass: "glow-pricing",
-    },
-    {
-      href: "/products",
-      title: "Product Prices",
-      description: "Manage, view, and print saved products and quotation sheets.",
-      icon: Package,
-      colorClass: "text-purple-400 group-hover:text-purple-300",
-      iconBg: "bg-purple-500/10 border-purple-500/20",
-      glowClass: "glow-products",
-    },
   ];
 
   return (
@@ -65,7 +48,7 @@ export default function Home() {
             Industrial Systems
           </h1>
           <p className="text-zinc-400 max-w-md mx-auto text-sm md:text-base">
-            Select an application to start weight calculations or furniture pricing.
+            Select an application to start weight calculations.
           </p>
         </div>
 
@@ -95,7 +78,7 @@ export default function Home() {
 
         {/* Footer */}
         <div className="text-center text-zinc-600 text-xs pt-4">
-          Steel Furniture Pricing & Calculator v2.0 • Secured Offline Storage
+          Steel Weight Calculator v2.0 • Secured Offline Storage
         </div>
       </div>
     </div>
