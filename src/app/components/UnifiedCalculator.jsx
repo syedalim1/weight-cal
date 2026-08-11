@@ -15,7 +15,6 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 import { saveFurnitureModel, getFurnitureModels, updateFurnitureModel } from "../actions/furniture";
-import { analyzeWithOpenRouter } from "../actions/ai";
 
 export default function UnifiedCalculator() {
   const [mode, setMode] = useState("manual"); // "manual" or "ai"
@@ -116,7 +115,18 @@ export default function UnifiedCalculator() {
     setIsAnalyzing(true);
     
     try {
-      const res = await analyzeWithOpenRouter(imageBase64, aiDimensions, aiMaterialPreset);
+      const response = await fetch("/api/analyze-direct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          image: imageBase64,
+          dimensions: aiDimensions,
+          preset: aiMaterialPreset,
+        }),
+      });
+
+      const res = await response.json();
+
       if (res.success && res.cutList) {
         // Map AI response to our row state
         const mappedRows = res.cutList.map(item => ({
