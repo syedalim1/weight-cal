@@ -19,6 +19,7 @@ import { saveFurnitureModel, getFurnitureModels, updateFurnitureModel } from "..
 export default function UnifiedCalculator() {
   const [mode, setMode] = useState("manual"); // "manual" or "ai"
   const [material, setMaterial] = useState("ms"); // "ms" or "ss"
+  const [globalUnit, setGlobalUnit] = useState("mm"); // "mm" or "inch"
 
   // Global Rates & Settings
   const [rates, setRates] = useState({ ms: 120, ss: 260 });
@@ -122,6 +123,7 @@ export default function UnifiedCalculator() {
           image: imageBase64,
           dimensions: aiDimensions,
           preset: aiMaterialPreset,
+          dimensionUnit: globalUnit,
         }),
       });
 
@@ -133,11 +135,11 @@ export default function UnifiedCalculator() {
           id: Math.random().toString(36).substr(2, 9),
           partName: item.partName || "",
           shape: item.shape || "square",
-          size: item.size_mm || "",
+          size: item.size || item.size_mm || "",
           thicknessUnit: "gauge",
           thickness: item.thickness_gauge || "",
-          lengthUnit: "mm",
-          length: item.length_mm?.toString() || "",
+          lengthUnit: globalUnit,
+          length: item.length?.toString() || item.length_mm?.toString() || "",
           quantity: item.qty || 1,
         }));
         
@@ -302,6 +304,11 @@ export default function UnifiedCalculator() {
       const parts = row.size.toLowerCase().split('x').map(p => parseFloat(p.trim()));
       width = parts[0] || 25;
       height = parts[1] || parts[0] || 25;
+    }
+
+    if (globalUnit === "inch") {
+      width = width * 25.4;
+      height = height * 25.4;
     }
 
     if (row.shape === "round") {
@@ -475,7 +482,7 @@ export default function UnifiedCalculator() {
       i + 1,
       r.partName,
       r.shape.charAt(0).toUpperCase() + r.shape.slice(1),
-      `${r.size} mm`,
+      `${r.size} ${globalUnit}`,
       `${r.thickness} ${r.thicknessUnit === "gauge" ? "G" : "mm"}`,
       `${r.length} ${r.lengthUnit}`,
       r.quantity || 1,
@@ -571,6 +578,22 @@ export default function UnifiedCalculator() {
             className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${material === "ss" ? 'bg-sky-500/20 text-sky-400 shadow' : 'text-zinc-400 hover:text-zinc-200'}`}
           >
             SS (Stainless Steel)
+          </button>
+        </div>
+
+        {/* Unit Toggle */}
+        <div className="flex bg-zinc-950 p-1 rounded-lg border border-zinc-800">
+           <button
+            onClick={() => setGlobalUnit("mm")}
+            className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${globalUnit === "mm" ? 'bg-zinc-800 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'}`}
+          >
+            mm
+          </button>
+          <button
+            onClick={() => setGlobalUnit("inch")}
+            className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${globalUnit === "inch" ? 'bg-zinc-800 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'}`}
+          >
+            inch
           </button>
         </div>
 
@@ -673,7 +696,7 @@ export default function UnifiedCalculator() {
                   <tr>
                     <th className="px-4 py-3 rounded-tl-lg font-medium w-44">Part Name</th>
                     <th className="px-4 py-3 font-medium w-28">Shape</th>
-                    <th className="px-4 py-3 font-medium w-28">Size (mm)</th>
+                    <th className="px-4 py-3 font-medium w-28">Size ({globalUnit})</th>
                     <th className="px-4 py-3 font-medium w-36">Thickness</th>
                     <th className="px-4 py-3 font-medium w-44">Cut Length</th>
                     <th className="px-4 py-3 font-medium w-20">Qty</th>
@@ -834,7 +857,7 @@ export default function UnifiedCalculator() {
                       return (
                         <div key={idx} className="flex justify-between items-center p-3 rounded-lg bg-zinc-950/50 border border-zinc-800">
                           <div className="text-zinc-300 font-medium">
-                            {shapeStr} Pipe - <span className="text-white">{p.size}mm</span> ({thickStr})
+                            {shapeStr} Pipe - <span className="text-white">{p.size}{globalUnit}</span> ({thickStr})
                           </div>
                           <div className="text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
                             {p.pipesNeeded} <span className="text-emerald-500/70 text-sm font-normal">Full Lengths (20ft)</span>
@@ -1046,7 +1069,7 @@ export default function UnifiedCalculator() {
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-zinc-400">Overall Height (mm)</Label>
+                      <Label className="text-xs text-zinc-400">Overall Height ({globalUnit})</Label>
                       <Input 
                         placeholder="e.g. 900" 
                         className="bg-zinc-950 border-zinc-800"
@@ -1055,7 +1078,7 @@ export default function UnifiedCalculator() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-zinc-400">Seat Height (mm)</Label>
+                      <Label className="text-xs text-zinc-400">Seat Height ({globalUnit})</Label>
                       <Input 
                         placeholder="e.g. 450" 
                         className="bg-zinc-950 border-zinc-800"
@@ -1064,7 +1087,7 @@ export default function UnifiedCalculator() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-zinc-400">Width (mm)</Label>
+                      <Label className="text-xs text-zinc-400">Width ({globalUnit})</Label>
                       <Input 
                         placeholder="e.g. 400" 
                         className="bg-zinc-950 border-zinc-800"
@@ -1073,7 +1096,7 @@ export default function UnifiedCalculator() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-zinc-400">Length (mm)</Label>
+                      <Label className="text-xs text-zinc-400">Length ({globalUnit})</Label>
                       <Input 
                         placeholder="e.g. 400" 
                         className="bg-zinc-950 border-zinc-800"

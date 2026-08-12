@@ -5,7 +5,7 @@ export const maxDuration = 60; // Allow up to 60s for AI response
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { image, dimensions, preset } = body;
+    const { image, dimensions, preset, dimensionUnit = "mm" } = body;
 
     if (!image) {
       return NextResponse.json(
@@ -26,10 +26,10 @@ export async function POST(request) {
 Your task is to analyze the provided image of steel furniture, along with the reference dimensions and material preset, and generate a complete and precise pipe cut-list.
 
 Reference Dimensions provided by user:
-Overall Height: ${dimensions?.overallHeight || "not specified"} mm
-Seat Height: ${dimensions?.seatHeight || "not specified"} mm
-Width: ${dimensions?.width || "not specified"} mm
-Length: ${dimensions?.length || "not specified"} mm
+Overall Height: ${dimensions?.overallHeight || "not specified"} ${dimensionUnit}
+Seat Height: ${dimensions?.seatHeight || "not specified"} ${dimensionUnit}
+Width: ${dimensions?.width || "not specified"} ${dimensionUnit}
+Length: ${dimensions?.length || "not specified"} ${dimensionUnit}
 Material Preset: ${preset || "not specified"}
 
 Output Requirements:
@@ -38,12 +38,13 @@ You must output ONLY a raw JSON array of objects representing the cut-list. DO N
 Each object in the array MUST have exactly these keys:
 - "partName" (string, e.g., "Front Legs", "Backrest Support")
 - "shape" (string, strictly one of: "square", "round", "rectangle")
-- "size_mm" (string, e.g., "25x25", "20", "40x20")
+- "size" (string, e.g., "25x25", "20", "40x20")
 - "thickness_gauge" (string, e.g., "18", "16", "20")
-- "length_mm" (string, e.g., "450", "900")
+- "length" (string, e.g., "450", "900")
 - "qty" (number, integer)
 
-Ensure the lengths mathematically make sense based on the overall dimensions provided.`;
+Ensure the lengths mathematically make sense based on the overall dimensions provided.
+Provide size and length in ${dimensionUnit}.`;
 
     const payload = {
       model: "google/gemini-3.6-flash",
