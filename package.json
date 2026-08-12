@@ -45,7 +45,7 @@
     "dotenv": "^17.4.2",
     "embla-carousel-react": "^8.6.0",
     "html2canvas": "^1.4.1",
-    "inngest": "^4.11.0",
+    "inngest": "^4.18.0",
     "input-otp": "^1.4.2",
     "jspdf": "^3.0.4",
     "jspdf-autotable": "^5.0.8",

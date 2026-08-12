@@ -113,3 +113,64 @@ Ensure the lengths mathematically make sense based on the overall dimensions pro
     return { success: false, error: `AI Analysis Error: ${error.message || "Internal server error."}` };
   }
 }
+
+import prisma from "@/lib/prisma";
+import { inngest } from "@/inngest/client";
+
+export async function triggerAiGeneration(payload) {
+  try {
+    // 1. Create a "Pending" record in Prisma
+    const newModel = await prisma.furnitureModel.create({
+      data: {
+        modelName: "AI Generated Model",
+        materialType: "ms",
+        referenceDimensions: payload.dimensions || {},
+        cutList: [{ generating: true }], // Special placeholder indicating "Pending"
+      },
+    });
+
+    // 2. Call Inngest to fire background job
+    await inngest.send({
+      name: "ai/generate.cutlist",
+      data: {
+        modelId: newModel.id,
+        base64Image: payload.image,
+        dimensions: payload.dimensions,
+        preset: payload.preset,
+        dimensionUnit: payload.dimensionUnit
+      },
+    });
+
+    return { success: true, modelId: newModel.id };
+  } catch (error) {
+    console.error("Failed to trigger AI generation:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getAiGenerationStatus(modelId) {
+  try {
+    const model = await prisma.furnitureModel.findUnique({
+      where: { id: modelId },
+    });
+
+    if (!model) {
+      return { success: false, error: "Model not found." };
+    }
+
+    // Check if it's still generating
+    const isGenerating = Array.isArray(model.cutList) 
+      && model.cutList.length === 1 
+      && model.cutList[0].generating === true;
+
+    if (isGenerating) {
+      return { success: true, status: "generating" };
+    }
+
+    // Otherwise, it's done
+    return { success: true, status: "completed", cutList: model.cutList };
+  } catch (error) {
+    console.error("Failed to get AI status:", error);
+    return { success: false, error: error.message };
+  }
+}

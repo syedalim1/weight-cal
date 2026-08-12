@@ -15,6 +15,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 import { saveFurnitureModel, getFurnitureModels, updateFurnitureModel } from "../actions/furniture";
+import { triggerAiGeneration, getAiGenerationStatus } from "../actions/ai";
 
 export default function UnifiedCalculator() {
   const [mode, setMode] = useState("manual"); // "manual" or "ai"
@@ -116,42 +117,46 @@ export default function UnifiedCalculator() {
     setIsAnalyzing(true);
     
     try {
-      const response = await fetch("/api/analyze-direct", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image: imageBase64,
-          dimensions: aiDimensions,
-          preset: aiMaterialPreset,
-          dimensionUnit: globalUnit,
-        }),
+      const res = await triggerAiGeneration({
+        image: imageBase64,
+        dimensions: aiDimensions,
+        preset: aiMaterialPreset,
+        dimensionUnit: globalUnit,
       });
 
-      const res = await response.json();
-
-      if (res.success && res.cutList) {
-        // Map AI response to our row state
-        const mappedRows = res.cutList.map(item => ({
-          id: Math.random().toString(36).substr(2, 9),
-          partName: item.partName || "",
-          shape: item.shape || "square",
-          size: item.size || item.size_mm || "",
-          thicknessUnit: "gauge",
-          thickness: item.thickness_gauge || "",
-          lengthUnit: globalUnit,
-          length: item.length?.toString() || item.length_mm?.toString() || "",
-          quantity: item.qty || 1,
-        }));
-        
-        setRows(mappedRows);
-        setMode("manual"); // Switch back to manual to review
-        alert("AI analysis complete! Review the generated cut-list.");
-      } else {
-        alert(res.error || "Failed to analyze image.");
+      if (!res.success) {
+        throw new Error(res.error || "Failed to trigger AI generation.");
       }
+
+      const modelId = res.modelId;
+      setLoadedModelId(modelId); // Set this so we are tracking the new model
+
+      const intervalId = setInterval(async () => {
+        const statusRes = await getAiGenerationStatus(modelId);
+        
+        if (!statusRes.success) {
+          clearInterval(intervalId);
+          setIsAnalyzing(false);
+          alert("Error checking status: " + statusRes.error);
+          return;
+        }
+
+        if (statusRes.status === "completed") {
+          clearInterval(intervalId);
+          
+          if (statusRes.cutList && Array.isArray(statusRes.cutList)) {
+            setRows(statusRes.cutList);
+            setMode("manual");
+            alert("AI analysis complete! Review the generated cut-list.");
+          } else {
+             alert("AI generation completed but no cutlist was found.");
+          }
+          setIsAnalyzing(false);
+        }
+      }, 3000);
+
     } catch (error) {
       alert("Error: " + error.message);
-    } finally {
       setIsAnalyzing(false);
     }
   };
