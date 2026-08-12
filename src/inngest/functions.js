@@ -137,6 +137,7 @@ Analyze the 3D geometry carefully, perform the math, and generate the JSON.`;
       });
     });
 
+    
     return { success: true, modelId };
   }
 );
