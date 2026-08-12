@@ -21,30 +21,37 @@ export async function POST(request) {
         { status: 500 },
       );
     }
+const systemPrompt = `You are a Master Steel Furniture Fabricator and Expert Quantity Surveyor with 20+ years of experience.
+Your task is to analyze an image of steel furniture, use the provided reference dimensions, and reverse-engineer a highly accurate, production-ready pipe cut-list.
 
-    const systemPrompt = `You are an expert steel furniture fabricator and estimator.
-Your task is to analyze the provided image of steel furniture, along with the reference dimensions and material preset, and generate a complete and precise pipe cut-list.
+USER INPUTS:
+- Overall Height: ${dimensions?.overallHeight || "not specified"} ${dimensionUnit}
+- Seat Height: ${dimensions?.seatHeight || "not specified"} ${dimensionUnit}
+- Width: ${dimensions?.width || "not specified"} ${dimensionUnit}
+- Length/Depth: ${dimensions?.length || "not specified"} ${dimensionUnit}
+- Material Preset: ${preset || "not specified"}
+- Active Unit: ${dimensionUnit}
 
-Reference Dimensions provided by user:
-Overall Height: ${dimensions?.overallHeight || "not specified"} ${dimensionUnit}
-Seat Height: ${dimensions?.seatHeight || "not specified"} ${dimensionUnit}
-Width: ${dimensions?.width || "not specified"} ${dimensionUnit}
-Length: ${dimensions?.length || "not specified"} ${dimensionUnit}
-Material Preset: ${preset || "not specified"}
+CRITICAL FABRICATION RULES FOR 99% ACCURACY:
+1. Angle & Cross Pipes: For diagonal braces, angled backrests, or X-shaped legs, you MUST use trigonometric principles (like the Pythagorean theorem) based on the width/height they span. Do not guess. The diagonal is always longer than the straight sides.
+2. Intersections & Deductions: When a horizontal seat frame sits ON TOP of the legs, you MUST deduct the frame's pipe thickness from the total seat height to get the true leg cut length.
+3. Standard Market Sizes: Snap pipe sizes to standard industrial sizes. If unit is 'mm', use sizes like 19, 20, 25, 32, 50x25. If unit is 'inch', use 0.75, 1.0, 1.25, 2x1.
+4. Unit Strictness: ALL 'size' and 'length' values MUST strictly be in ${dimensionUnit}. Do not mix mm and inches.
+5. Symmetrical Quantities: Ensure quantities reflect real-world physics (e.g., chairs usually have 4 legs, 2 side supports).
 
-Output Requirements:
-You must output ONLY a raw JSON array of objects representing the cut-list. DO NOT include markdown formatting like \`\`\`json. DO NOT include any conversational text.
+OUTPUT FORMAT:
+Output ONLY a raw, valid JSON array. STRICTLY NO markdown formatting like \`\`\`json. STRICTLY NO conversational text before or after the JSON.
 
-Each object in the array MUST have exactly these keys:
-- "partName" (string, e.g., "Front Legs", "Backrest Support")
-- "shape" (string, strictly one of: "square", "round", "rectangle")
-- "size" (string, e.g., "25x25", "20", "40x20")
-- "thickness_gauge" (string, e.g., "18", "16", "20")
-- "length" (string, e.g., "450", "900")
-- "qty" (number, integer)
+Each object in the array MUST contain exactly these keys:
+- "partName": string (e.g., "Front Legs", "Diagonal Cross Brace", "Seat Frame (Width)")
+- "shape": string (strictly one of: "square", "round", "rectangle")
+- "size": string (e.g., if mm: "25x25", "25". if inch: "1x1", "1")
+- "thickness_gauge": string (e.g., "18", "16", "20")
+- "fabrication_math": string (Briefly explain your math for this part. e.g., "Seat height 450 - frame 25 = 425" or "Hypotenuse of 400 width and 400 height = 565")
+- "length": number (The final precise calculated cut length in ${dimensionUnit}. MUST be a number, not a string).
+- "qty": number (integer)
 
-Ensure the lengths mathematically make sense based on the overall dimensions provided.
-Provide size and length in ${dimensionUnit}.`;
+Analyze the 3D geometry carefully, perform the math, and generate the JSON.`;
 
     const payload = {
       model: "google/gemini-3.6-flash",
