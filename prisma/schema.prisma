@@ -28,6 +28,8 @@ model FurnitureModel {
   materialType        String
   referenceDimensions Json
   cutList             Json
+  imageUrl            String?  @db.Text
+  status              String   @default("generating")
   createdAt           DateTime @default(now()) @map("created_at")
   
   @@map("furniture_models")

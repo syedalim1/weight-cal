@@ -8,9 +8,17 @@ export const generateFurnitureCutlist = inngest.createFunction(
     triggers: [{ event: "ai/generate.cutlist" }],
   },
   async ({ event, step }) => {
-    const { modelId, base64Image, dimensions, preset, dimensionUnit } = event.data;
+    const { modelId, dimensions, preset, dimensionUnit } = event.data;
 
     const parsedJson = await step.run("call-openrouter-and-parse", async () => {
+      const dbModel = await prisma.furnitureModel.findUnique({
+        where: { id: modelId },
+      });
+      if (!dbModel || !dbModel.imageUrl) {
+        throw new Error("Model or image not found in database.");
+      }
+      const base64Image = dbModel.imageUrl;
+
       const apiKey = process.env.OPENROUTER_API_KEY;
       if (!apiKey) {
         throw new Error("OpenRouter API Key not configured.");
@@ -124,6 +132,7 @@ Analyze the 3D geometry carefully, perform the math, and generate the JSON.`;
         where: { id: modelId },
         data: {
           cutList: mappedRows,
+          status: "completed",
         },
       });
     });

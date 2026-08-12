@@ -125,7 +125,9 @@ export async function triggerAiGeneration(payload) {
         modelName: "AI Generated Model",
         materialType: "ms",
         referenceDimensions: payload.dimensions || {},
-        cutList: [{ generating: true }], // Special placeholder indicating "Pending"
+        cutList: [],
+        imageUrl: payload.image,
+        status: "generating"
       },
     });
 
@@ -134,7 +136,6 @@ export async function triggerAiGeneration(payload) {
       name: "ai/generate.cutlist",
       data: {
         modelId: newModel.id,
-        base64Image: payload.image,
         dimensions: payload.dimensions,
         preset: payload.preset,
         dimensionUnit: payload.dimensionUnit
@@ -159,11 +160,7 @@ export async function getAiGenerationStatus(modelId) {
     }
 
     // Check if it's still generating
-    const isGenerating = Array.isArray(model.cutList) 
-      && model.cutList.length === 1 
-      && model.cutList[0].generating === true;
-
-    if (isGenerating) {
+    if (model.status === "generating") {
       return { success: true, status: "generating" };
     }
 
