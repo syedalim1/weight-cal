@@ -31,7 +31,7 @@ Each object in the array MUST have exactly these keys:
 Ensure the lengths mathematically make sense based on the overall dimensions provided.`;
 
     const payload = {
-      model: "google/gemini-3.6-flash",
+      model: "anthropic/claude-opus-5",
       messages: [
         {
           role: "system",
