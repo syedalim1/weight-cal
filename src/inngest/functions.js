@@ -57,7 +57,7 @@ Each object in the array MUST contain exactly these keys:
 Analyze the 3D geometry carefully, perform the math, and generate the JSON.`;
 
       const payload = {
-        model: "google/gemini-3.6-flash",
+        model: "anthropic/claude-opus-5",
         messages: [
           {
             role: "system",
@@ -137,7 +137,7 @@ Analyze the 3D geometry carefully, perform the math, and generate the JSON.`;
       });
     });
 
-    
+
     return { success: true, modelId };
   }
 );
