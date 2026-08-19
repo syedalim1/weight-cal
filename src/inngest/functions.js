@@ -57,7 +57,7 @@ Each object in the array MUST contain exactly these keys:
 Analyze the 3D geometry carefully, perform the math, and generate the JSON.`;
 
       const payload = {
-        model: "anthropic/claude-opus-5",
+        model: "google/gemini-3.7-flash",
         messages: [
           {
             role: "system",

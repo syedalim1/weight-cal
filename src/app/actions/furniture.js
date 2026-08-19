@@ -13,10 +13,9 @@ export async function saveFurnitureModel(data) {
         cutList: data.cutList,
       },
     });
-    
-    // Revalidate the path so the sidebar updates
+
     revalidatePath("/calculator");
-    
+
     return { success: true, model: newModel };
   } catch (error) {
     console.error("Failed to save furniture model:", error);
@@ -49,7 +48,7 @@ export async function updateFurnitureModel(id, data) {
     });
 
     revalidatePath("/calculator");
-    
+
     return { success: true, model: updatedModel };
   } catch (error) {
     console.error("Failed to update furniture model:", error);

@@ -15,7 +15,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 import { saveFurnitureModel, getFurnitureModels, updateFurnitureModel } from "../actions/furniture";
-import { triggerAiGeneration, getAiGenerationStatus } from "../actions/ai";
+
+
 
 export default function UnifiedCalculator() {
   const [mode, setMode] = useState("manual"); // "manual" or "ai"
@@ -117,46 +118,33 @@ export default function UnifiedCalculator() {
     setIsAnalyzing(true);
     
     try {
-      const res = await triggerAiGeneration({
-        image: imageBase64,
-        dimensions: aiDimensions,
-        preset: aiMaterialPreset,
-        dimensionUnit: globalUnit,
+      const response = await fetch("/api/analyze/direct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          image: imageBase64,
+          dimensions: aiDimensions,
+          preset: aiMaterialPreset,
+          dimensionUnit: globalUnit,
+        }),
       });
 
+      const res = await response.json();
+
       if (!res.success) {
-        throw new Error(res.error || "Failed to trigger AI generation.");
+        throw new Error(res.error || "AI analysis failed.");
       }
 
-      const modelId = res.modelId;
-      setLoadedModelId(modelId); // Set this so we are tracking the new model
-
-      const intervalId = setInterval(async () => {
-        const statusRes = await getAiGenerationStatus(modelId);
-        
-        if (!statusRes.success) {
-          clearInterval(intervalId);
-          setIsAnalyzing(false);
-          alert("Error checking status: " + statusRes.error);
-          return;
-        }
-
-        if (statusRes.status === "completed") {
-          clearInterval(intervalId);
-          
-          if (statusRes.cutList && Array.isArray(statusRes.cutList)) {
-            setRows(statusRes.cutList);
-            setMode("manual");
-            alert("AI analysis complete! Review the generated cut-list.");
-          } else {
-             alert("AI generation completed but no cutlist was found.");
-          }
-          setIsAnalyzing(false);
-        }
-      }, 3000);
-
+      if (res.cutList && Array.isArray(res.cutList)) {
+        setRows(res.cutList);
+        setMode("manual");
+        alert("AI analysis complete! Review the generated cut-list.");
+      } else {
+        alert("AI analysis completed but no cut-list was returned.");
+      }
     } catch (error) {
       alert("Error: " + error.message);
+    } finally {
       setIsAnalyzing(false);
     }
   };

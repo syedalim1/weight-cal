@@ -6,15 +6,16 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model AiJob {
   id        String   @id @default(uuid())
   status    String   @default("pending")
   progress  String?
-  result    Json?
+  result    String?
   error     String?
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -31,7 +32,6 @@ model FurnitureModel {
   imageUrl            String?  @db.Text
   status              String   @default("generating")
   createdAt           DateTime @default(now()) @map("created_at")
-  
+
   @@map("furniture_models")
 }
-
